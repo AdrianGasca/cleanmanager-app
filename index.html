@@ -2322,7 +2322,7 @@ async function syncPropiedades(plataforma) {
   toast('Importando propiedades de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
   // URL del webhook de n8n (ajusta a tu instancia)
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook';
+  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook-test';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/propiedades/${plataforma}`;
   
   try {
