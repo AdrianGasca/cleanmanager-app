@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>CleanManager Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font: 'DM Sans', -apple-system, sans-serif;
+      --bg: #0f0f14;
+      --bg-sidebar: #16161e;
+      --bg-card: #1c1c26;
+      --bg-card-hover: #24242f;
+      --bg-input: #13131a;
+      --border: #2a2a3a;
+      --border-light: #3a3a4a;
+      --text: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-bg: rgba(99, 102, 241, 0.12);
+      --accent-border: rgba(99, 102, 241, 0.3);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --sidebar-w: 260px;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100%; overflow: hidden; }
+
+    .app { display: flex; height: 100vh; }
+    .sidebar { width: var(--sidebar-w); background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.2rem; }
+    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .account-badge { margin-top: 12px; padding: 8px 12px; background: var(--bg-card); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-secondary); word-break: break-all; }
+    .sidebar-nav { flex: 1; padding: 12px 10px; }
+    .nav-section { padding: 14px 12px 6px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; font-weight: 500; font-size: 0.9rem; margin-bottom: 2px; }
+    .nav-item:hover { background: var(--bg-card); color: var(--text); }
+    .nav-item.active { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+    .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+    .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm); cursor: pointer; }
+    .user-menu:hover { background: var(--bg-card-hover); }
+    .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { padding: 14px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-sidebar); flex-wrap: wrap; gap: 12px; }
+    .page-title { font-size: 1.4rem; font-weight: 700; }
+    .content { flex: 1; overflow-y: auto; padding: 28px; }
+
+    .view { display: none; animation: fadeIn 0.2s ease; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    .stat-card.accent { background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%); border: none; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-card.accent .stat-label { color: rgba(255,255,255,0.8); }
+    .stat-value { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+    .stat-card.accent .stat-value { color: white; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 18px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+    .card-title { font-size: 1.05rem; font-weight: 700; }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; font-family: var(--font); }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--bg-card); color: var(--text); border-color: var(--border); }
+    .btn-secondary:hover { background: var(--bg-card-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.95rem; font-family: var(--font); transition: all 0.15s; }
+    .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
+
+    .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg-sidebar); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); position: sticky; top: 0; }
+    td { font-size: 0.88rem; }
+    tr:hover td { background: var(--bg-card); }
+    tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+    .badge-success { background: var(--success-bg); color: var(--success); }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); }
+    .badge-neutral { background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); }
+    .badge-accent { background: var(--accent-bg); color: var(--accent); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-card); z-index: 10; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-input); border: none; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+    .modal-body { padding: 22px; }
+    .modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: var(--bg-card); }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); padding: 14px 20px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .item-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; }
+    .item-card:hover { border-color: var(--accent-border); transform: translateY(-2px); }
+    .item-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px; }
+    .item-card-title { font-weight: 700; font-size: 0.95rem; }
+    .item-card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+    .stock-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 14px; }
+    .stock-card.low { border-left: 4px solid var(--danger); }
+    .stock-card.ok { border-left: 4px solid var(--success); }
+    .stock-info { flex: 1; }
+    .stock-name { font-weight: 700; margin-bottom: 4px; }
+    .stock-qty { font-size: 1.3rem; font-weight: 800; }
+    .stock-actions { display: flex; gap: 6px; }
+    .stock-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+    .stock-btn:hover { background: var(--bg-card-hover); }
+    .stock-btn.add { background: var(--success-bg); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+    .stock-btn.sub { background: var(--danger-bg); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 14px; opacity: 0.5; }
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; font-size: 1.1rem; }
+
+    .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 20px; }
+    .login-box { width: 100%; max-width: 400px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px; }
+    .login-logo { text-align: center; margin-bottom: 28px; }
+    .login-logo .logo-icon { width: 60px; height: 60px; font-size: 1.6rem; margin: 0 auto 14px; }
+    .login-logo h1 { font-size: 1.4rem; font-weight: 800; }
+    .login-logo p { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+    .login-tabs { display: flex; gap: 4px; background: var(--bg-input); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 22px; }
+    .login-tab { flex: 1; padding: 10px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.88rem; cursor: pointer; color: var(--text-muted); transition: all 0.15s; border: none; background: none; font-family: var(--font); }
+    .login-tab.active { background: var(--accent); color: white; }
+    .login-error { color: var(--danger); text-align: center; margin-top: 14px; font-size: 0.85rem; display: none; padding: 10px; background: var(--danger-bg); border-radius: var(--radius-sm); }
+
+    .loader { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 16px; }
+
+    @media (max-width: 900px) {
+      .sidebar { position: fixed; left: -280px; top: 0; bottom: 0; z-index: 100; transition: left 0.3s; }
+      .sidebar.open { left: 0; }
+      .mobile-toggle { display: flex !important; }
+      .form-row { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+    }
+    .mobile-toggle { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-size: 1.2rem; }
+    .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+    .mobile-overlay.open { display: block; }
+
+    .filters-bar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    .filters-bar select, .filters-bar input { padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem; font-family: var(--font); }
+
+    /* Servicios específicos */
+    .servicio-row { display: flex; align-items: center; gap: 12px; }
+    .servicio-prop { font-weight: 700; }
+    .servicio-time { font-size: 0.8rem; color: var(--text-muted); }
+    .servicio-actions { display: flex; gap: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loader" style="width:44px; height:44px;"></div>
+  <span style="color:var(--text-muted);">Cargando...</span>
+</div>
+
+<!-- LOGIN VIEW -->
+<div id="login-view" class="login-container" style="display:none;">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon">🏠</div>
+      <h1>CleanManager Pro</h1>
+      <p>Gestión Integral de Limpiezas</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="login-tab" onclick="switchAuthTab('register')">Registrarse</button>
+    </div>
+    
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">
+        Iniciar Sesión
+      </button>
+    </div>
+    
+    <!-- Register Form -->
+    <div id="form-register" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Nombre de tu Empresa</label>
+        <input type="text" id="reg-empresa" class="form-input" placeholder="Limpiezas Costa Sur">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tu Nombre</label>
+        <input type="text" id="reg-nombre" class="form-input" placeholder="María García">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" class="form-input" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input type="tel" id="reg-telefono" class="form-input" placeholder="612345678">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña (mín. 6 caracteres)</label>
+        <input type="password" id="reg-password" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="doRegister()">
+        Crear Cuenta
+      </button>
+    </div>
+    
+    <div id="auth-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-view" class="app" style="display:none;">
+  <div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
+  
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">🏠</div>
+        <span>CleanManager</span>
+      </div>
+      <div class="account-badge" id="account-name">Mi Empresa</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" data-view="servicios" onclick="navigate('servicios')">
+        <span class="nav-icon">📅</span> Servicios
+        <span class="nav-badge" id="servicios-badge" style="display:none;">0</span>
+      </div>
+
+      <div class="nav-section">Inventario</div>
+      <div class="nav-item" data-view="stock" onclick="navigate('stock')">
+        <span class="nav-icon">📦</span> Stock
+        <span class="nav-badge" id="stock-alert-badge" style="display:none;">0</span>
+      </div>
+      <div class="nav-item" data-view="kits" onclick="navigate('kits')">
+        <span class="nav-icon">🎁</span> Kits
+      </div>
+
+      <div class="nav-section">Gestión</div>
+      <div class="nav-item" data-view="propiedades" onclick="navigate('propiedades')">
+        <span class="nav-icon">🏠</span> Propiedades
+      </div>
+      <div class="nav-item" data-view="propietarios" onclick="navigate('propietarios')">
+        <span class="nav-icon">👤</span> Propietarios
+      </div>
+      <div class="nav-item" data-view="empleados" onclick="navigate('empleados')">
+        <span class="nav-icon">👥</span> Empleados
+      </div>
+
+      <div class="nav-section">Finanzas</div>
+      <div class="nav-item" data-view="extras" onclick="navigate('extras')">
+        <span class="nav-icon">🧹</span> Extras
+      </div>
+      <div class="nav-item" data-view="mantenimiento" onclick="navigate('mantenimiento')">
+        <span class="nav-icon">🔧</span> Mantenimiento
+      </div>
+      <div class="nav-item" data-view="gastos" onclick="navigate('gastos')">
+        <span class="nav-icon">📋</span> Gastos Fijos
+      </div>
+
+      <div class="nav-section">Sistema</div>
+      <div class="nav-item" data-view="alertas" onclick="navigate('alertas')">
+        <span class="nav-icon">🔔</span> Alertas
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-menu" onclick="logout()">
+        <div class="user-avatar" id="user-avatar">CM</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Usuario</div>
+          <div class="user-role">Cerrar sesión ⏻</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+        <h1 class="page-title" id="page-title">Dashboard</h1>
+      </div>
+      <div id="topbar-actions"></div>
+    </header>
+
+    <div class="content">
+      
+      <!-- DASHBOARD -->
+      <div id="view-dashboard" class="view active">
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-label">Servicios Hoy</div>
+            <div class="stat-value" id="stat-hoy">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pendientes</div>
+            <div class="stat-value" id="stat-pendientes">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Propiedades</div>
+            <div class="stat-value" id="stat-props">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stock Bajo</div>
+            <div class="stat-value" id="stat-stock-bajo" style="color:var(--danger);">0</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:18px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 Próximos Servicios</h3>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('servicios')">Ver todos</button>
+            </div>
+            <div id="dash-servicios"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">⚠️ Alertas</h3>
+            </div>
+            <div id="dash-alertas"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVICIOS -->
+      <div id="view-servicios" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📅 Servicios de Limpieza</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-servicio')">+ Nuevo Servicio</button>
+          </div>
+          <div class="filters-bar">
+            <input type="date" id="serv-fecha" onchange="renderServicios()">
+            <select id="serv-estado" onchange="renderServicios()">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">🟡 Pendiente</option>
+              <option value="confirmado">🔵 Confirmado</option>
+              <option value="en_proceso">🟠 En proceso</option>
+              <option value="completado">🟢 Completado</option>
+              <option value="cancelado">🔴 Cancelado</option>
+            </select>
+            <select id="serv-propiedad" onchange="renderServicios()">
+              <option value="">Todas las propiedades</option>
+            </select>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Propiedad</th>
+                  <th>Tipo</th>
+                  <th>Huésped</th>
+                  <th>Asignado</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="servicios-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div id="view-stock" class="view">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Artículos</div>
+            <div class="stat-value" id="stock-total">0</div>
+          </div>
+          <div class="stat-card" style="border-color:var(--danger);">
+            <div class="stat-label">Stock Bajo</div>
+            <div class="stat-value" id="stock-bajo" style="color:var(--danger);">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Valor Total</div>
+            <div class="stat-value" id="stock-valor">0€</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📦 Inventario</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-stock')">+ Nuevo Artículo</button>
+          </div>
+          <div id="stock-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- KITS -->
+      <div id="view-kits" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🎁 Kits de Productos</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-kit')">+ Nuevo Kit</button>
+          </div>
+          <div id="kits-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- PROPIEDADES -->
+      <div id="view-propiedades" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🏠 Propiedades</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-propiedad')">+ Nueva Propiedad</button>
+          </div>
+          <div id="propiedades-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- PROPIETARIOS -->
+      <div id="view-propietarios" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">👤 Propietarios</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-propietario')">+ Nuevo Propietario</button>
+          </div>
+          <div id="propietarios-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- EMPLEADOS -->
+      <div id="view-empleados" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">👥 Equipo</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-empleado')">+ Nuevo Empleado</button>
+          </div>
+          <div id="empleados-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- EXTRAS -->
+      <div id="view-extras" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🧹 Extras de Limpieza</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-extra')">+ Nuevo Extra</button>
+          </div>
+          <div class="filters-bar">
+            <select id="extras-mes" onchange="renderExtras()"></select>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Fecha</th><th>Propiedad</th><th>Concepto</th><th>Importe</th><th></th></tr></thead>
+              <tbody id="extras-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANTENIMIENTO -->
+      <div id="view-mantenimiento" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🔧 Mantenimiento</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-mantenimiento')">+ Nueva Incidencia</button>
+          </div>
+          <div class="filters-bar">
+            <select id="mant-estado" onchange="renderMantenimiento()">
+              <option value="">Todos</option>
+              <option value="pendiente">🟡 Pendientes</option>
+              <option value="resuelto">🟢 Resueltos</option>
+            </select>
+          </div>
+          <div id="mantenimiento-grid" class="grid-cards"></div>
+        </div>
+      </div>
+
+      <!-- GASTOS -->
+      <div id="view-gastos" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📋 Gastos Fijos</h3>
+            <button class="btn btn-primary" onclick="openModal('modal-gasto')">+ Nuevo Gasto</button>
+          </div>
+          <div class="filters-bar">
+            <select id="gastos-mes" onchange="renderGastos()"></select>
+            <select id="gastos-tipo" onchange="renderGastos()">
+              <option value="">Todos</option>
+              <option value="luz">💡 Luz</option>
+              <option value="agua">💧 Agua</option>
+              <option value="gas">🔥 Gas</option>
+              <option value="comunidad">🏢 Comunidad</option>
+              <option value="internet">📶 Internet</option>
+              <option value="otro">📎 Otro</option>
+            </select>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Fecha</th><th>Propiedad</th><th>Tipo</th><th>Concepto</th><th>Importe</th><th>Paga</th><th></th></tr></thead>
+              <tbody id="gastos-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTAS -->
+      <div id="view-alertas" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🔔 Configuración de Alertas</h3>
+            <button class="btn btn-primary" onclick="saveAlertConfig()">💾 Guardar</button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:18px;">
+            <div style="background:var(--bg-input); padding:18px; border-radius:var(--radius);">
+              <h4 style="margin-bottom:14px;">📱 Notificaciones</h4>
+              <div class="form-group">
+                <label class="form-label">WhatsApp</label>
+                <input type="tel" id="alert-whatsapp" class="form-input" placeholder="34612345678">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="alert-email" class="form-input">
+              </div>
+            </div>
+            <div style="background:var(--bg-input); padding:18px; border-radius:var(--radius);">
+              <h4 style="margin-bottom:14px;">⚙️ Tipos</h4>
+              <label style="display:flex; align-items:center; gap:10px; margin-bottom:12px; cursor:pointer;">
+                <input type="checkbox" id="alert-stock"> ⚠️ Stock bajo
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="alert-semanal"> 📅 Recordatorio semanal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODALES -->
+
+<!-- Modal Servicio -->
+<div id="modal-servicio" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">📅 Nuevo Servicio</h3>
+      <button class="modal-close" onclick="closeModal('modal-servicio')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="serv-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Propiedad *</label>
+          <select id="serv-propiedad-sel" class="form-input"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Servicio</label>
+          <select id="serv-tipo" class="form-input">
+            <option value="checkout">🚪 Check-out</option>
+            <option value="checkin">🔑 Check-in</option>
+            <option value="refresh">✨ Refresh</option>
+            <option value="profunda">🧽 Profunda</option>
+            <option value="mantenimiento">🔧 Mantenimiento</option>
+            <option value="otro">📋 Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha del Servicio *</label>
+          <input type="date" id="serv-fecha-input" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Inicio</label>
+          <input type="time" id="serv-hora" class="form-input" value="11:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Check-in Huésped</label>
+          <input type="date" id="serv-checkin" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Check-out Huésped</label>
+          <input type="date" id="serv-checkout" class="form-input">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre Huésped</label>
+          <input type="text" id="serv-huesped" class="form-input" placeholder="Nombre del huésped">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nº Huéspedes</label>
+          <input type="number" id="serv-num-huespedes" class="form-input" value="2">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Asignar a</label>
+          <select id="serv-empleado" class="form-input"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio (€)</label>
+          <input type="number" id="serv-precio" class="form-input" step="0.01">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select id="serv-estado-sel" class="form-input">
+            <option value="pendiente">🟡 Pendiente</option>
+            <option value="confirmado">🔵 Confirmado</option>
+            <option value="en_proceso">🟠 En proceso</option>
+            <option value="completado">🟢 Completado</option>
+            <option value="cancelado">🔴 Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridad</label>
+          <select id="serv-prioridad" class="form-input">
+            <option value="normal">Normal</option>
+            <option value="alta">⚡ Alta</option>
+            <option value="urgente">🚨 Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea id="serv-notas" class="form-input" rows="2" placeholder="Instrucciones especiales..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-servicio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveServicio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Stock -->
+<div id="modal-stock" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">📦 Nuevo Artículo</h3>
+      <button class="modal-close" onclick="closeModal('modal-stock')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" id="stock-item" class="form-input" placeholder="Toallas de baño">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Stock Actual</label>
+          <input type="number" id="stock-qty" class="form-input" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Mínimo</label>
+          <input type="number" id="stock-min" class="form-input" value="10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Precio/Unidad (€)</label>
+          <input type="number" id="stock-precio" class="form-input" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pagador</label>
+          <select id="stock-pagador" class="form-input">
+            <option value="gestor">Gestor</option>
+            <option value="propietario">Propietario</option>
+          </select>
+        </div>
+      </div>
+      <h4 style="margin:16px 0 10px; font-size:0.85rem; color:var(--text-secondary);">Consumo por Limpieza</h4>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Fijo</label><input type="number" id="stock-c-limp" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">x Hab</label><input type="number" id="stock-c-hab" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">x Baño</label><input type="number" id="stock-c-bano" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">x Huésped</label><input type="number" id="stock-c-huesp" class="form-input" value="0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-stock')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStock()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Propiedad -->
+<div id="modal-propiedad" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🏠 Nueva Propiedad</h3>
+      <button class="modal-close" onclick="closeModal('modal-propiedad')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" id="prop-nombre" class="form-input" placeholder="Apartamento Centro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio Limpieza (€)</label>
+        <input type="number" id="prop-precio" class="form-input" value="45" step="0.01">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-propiedad')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePropiedad()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Propietario -->
+<div id="modal-propietario" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">👤 Nuevo Propietario</h3>
+      <button class="modal-close" onclick="closeModal('modal-propietario')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" id="propiet-nombre" class="form-input">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="propiet-email" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input type="tel" id="propiet-telefono" class="form-input">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-propietario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePropietario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Empleado -->
+<div id="modal-empleado" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">👥 Nuevo Empleado</h3>
+      <button class="modal-close" onclick="closeModal('modal-empleado')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" id="emp-nombre" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" id="emp-email" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select id="emp-rol" class="form-input">
+          <option value="limpiador">Limpiador</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-empleado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmpleado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Kit -->
+<div id="modal-kit" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🎁 Nuevo Kit</h3>
+      <button class="modal-close" onclick="closeModal('modal-kit')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" id="kit-nombre" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input type="text" id="kit-desc" class="form-input">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-kit')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveKit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Extra -->
+<div id="modal-extra" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🧹 Nuevo Extra</h3>
+      <button class="modal-close" onclick="closeModal('modal-extra')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha *</label>
+          <input type="date" id="extra-fecha" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Propiedad *</label>
+          <select id="extra-prop" class="form-input"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Concepto *</label>
+        <input type="text" id="extra-concepto" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Importe (€) *</label>
+        <input type="number" id="extra-importe" class="form-input" step="0.01">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-extra')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveExtra()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mantenimiento -->
+<div id="modal-mantenimiento" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🔧 Nueva Incidencia</h3>
+      <button class="modal-close" onclick="closeModal('modal-mantenimiento')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="mant-fecha" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Propiedad *</label>
+          <select id="mant-prop" class="form-input"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Título *</label>
+        <input type="text" id="mant-titulo" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea id="mant-desc" class="form-input" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Importe (€)</label>
+          <input type="number" id="mant-importe" class="form-input" step="0.01" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select id="mant-estado-sel" class="form-input">
+            <option value="pendiente">Pendiente</option>
+            <option value="resuelto">Resuelto</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mantenimiento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMantenimiento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Gasto -->
+<div id="modal-gasto" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">📋 Nuevo Gasto Fijo</h3>
+      <button class="modal-close" onclick="closeModal('modal-gasto')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha *</label>
+          <input type="date" id="gasto-fecha" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Propiedad *</label>
+          <select id="gasto-prop" class="form-input"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo *</label>
+          <select id="gasto-tipo" class="form-input">
+            <option value="luz">💡 Luz</option>
+            <option value="agua">💧 Agua</option>
+            <option value="gas">🔥 Gas</option>
+            <option value="comunidad">🏢 Comunidad</option>
+            <option value="internet">📶 Internet</option>
+            <option value="otro">📎 Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Importe (€) *</label>
+          <input type="number" id="gasto-importe" class="form-input" step="0.01">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Concepto</label>
+        <input type="text" id="gasto-concepto" class="form-input">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"><span id="toast-icon">✓</span><span id="toast-msg">OK</span></div>
+
+<script>
+// ===== CONFIG =====
+const API = 'https://chat.adrian-261.workers.dev';
+const TBL = {
+  usuarios: 'cm_usuarios',
+  servicios: 'cm_servicios',
+  inventario: 'inventario',
+  kits: 'kits',
+  propietarios: 'propietarios',
+  gastos: 'gastos_fijos',
+  mantenimiento: 'mantenimiento',
+  extras: 'limpieza_extras',
+  propiedades: 'propiedades_config',
+  empleados: 'empleados',
+  alertas: 'alertas_config'
+};
+
+// ===== STATE =====
+const S = {
+  user: null,
+  clienteEmail: null,
+  servicios: [],
+  inventario: [],
+  kits: [],
+  propietarios: [],
+  gastos: [],
+  mantenimiento: [],
+  extras: [],
+  propiedades: [],
+  empleados: [],
+  alertas: null
+};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('cm_user');
+  if (saved) {
+    S.user = JSON.parse(saved);
+    S.clienteEmail = S.user.cliente_email;
+    initApp();
+  } else {
+    showLogin();
+  }
+});
+
+function showLogin() {
+  hide('loading-overlay');
+  show('login-view');
+  hide('app-view');
+}
+
+async function initApp() {
+  show('loading-overlay');
+  hide('login-view');
+  try {
+    await loadAll();
+    hide('loading-overlay');
+    show('app-view');
+    
+    $('#account-name').textContent = S.user.empresa || S.clienteEmail;
+    $('#user-name').textContent = S.user.nombre || 'Usuario';
+    $('#user-avatar').textContent = (S.user.nombre || 'U').substring(0, 2).toUpperCase();
+    
+    initFilters();
+    renderDashboard();
+  } catch (e) {
+    console.error(e);
+    toast('Error al cargar', 'error');
+    hide('loading-overlay');
+    show('app-view');
+  }
+}
+
+async function loadAll() {
+  const ce = encodeURIComponent(S.clienteEmail);
+  const load = async (t, f = 'cliente_email') => {
+    try {
+      const r = await fetch(`${API}/supa/list/${t}?${f}=eq.${ce}`);
+      return r.ok ? await r.json() : [];
+    } catch { return []; }
+  };
+  
+  [S.servicios, S.inventario, S.kits, S.propietarios, S.gastos, S.mantenimiento, S.extras, S.propiedades, S.empleados] = await Promise.all([
+    load(TBL.servicios),
+    load(TBL.inventario),
+    load(TBL.kits),
+    load(TBL.propietarios),
+    load(TBL.gastos),
+    load(TBL.mantenimiento),
+    load(TBL.extras),
+    load(TBL.propiedades),
+    load(TBL.empleados, 'email_host')
+  ]);
+  
+  const alertas = await load(TBL.alertas);
+  S.alertas = alertas[0] || null;
+}
+
+// ===== AUTH =====
+function switchAuthTab(tab) {
+  $$('.login-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  $('#form-login').style.display = tab === 'login' ? 'block' : 'none';
+  $('#form-register').style.display = tab === 'register' ? 'block' : 'none';
+  $('#auth-error').style.display = 'none';
+}
+
+async function doLogin() {
+  const email = $('#login-email').value.trim().toLowerCase();
+  const pass = $('#login-password').value;
+  if (!email || !pass) return showAuthError('Completa todos los campos');
+  
+  try {
+    const r = await fetch(`${API}/supa/list/${TBL.usuarios}?email=eq.${encodeURIComponent(email)}`);
+    const users = await r.json();
+    if (!users.length) return showAuthError('Usuario no encontrado');
+    
+    const user = users[0];
+    if (user.password_hash !== pass) return showAuthError('Contraseña incorrecta');
+    if (!user.activo) return showAuthError('Cuenta desactivada');
+    
+    S.user = user;
+    S.clienteEmail = user.cliente_email;
+    localStorage.setItem('cm_user', JSON.stringify(user));
+    
+    // Update last login
+    fetch(`${API}/supa/patch/${TBL.usuarios}?id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ last_login: new Date().toISOString() })
+    });
+    
+    await initApp();
+  } catch (e) {
+    showAuthError('Error de conexión');
+  }
+}
+
+async function doRegister() {
+  const empresa = $('#reg-empresa').value.trim();
+  const nombre = $('#reg-nombre').value.trim();
+  const email = $('#reg-email').value.trim().toLowerCase();
+  const telefono = $('#reg-telefono').value.trim();
+  const pass = $('#reg-password').value;
+  
+  if (!empresa || !nombre || !email || !pass) return showAuthError('Completa todos los campos');
+  if (pass.length < 6) return showAuthError('Contraseña mínimo 6 caracteres');
+  if (!email.includes('@')) return showAuthError('Email no válido');
+  
+  try {
+    // Check existing
+    console.log('Checking if email exists...');
+    const check = await fetch(`${API}/supa/list/${TBL.usuarios}?email=eq.${encodeURIComponent(email)}`);
+    const checkData = await check.json();
+    console.log('Check response:', checkData);
+    if (checkData.length) return showAuthError('Este email ya está registrado');
+    
+    // Create user
+    const data = {
+      email,
+      password_hash: pass,
+      nombre,
+      empresa,
+      telefono,
+      cliente_email: email,
+      rol: 'admin',
+      activo: true,
+      plan: 'trial'
+    };
+    
+    console.log('Creating user with data:', data);
+    const r = await fetch(`${API}/supa/create/${TBL.usuarios}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    console.log('Create response status:', r.status);
+    const responseText = await r.text();
+    console.log('Create response body:', responseText);
+    
+    let users;
+    try {
+      users = JSON.parse(responseText);
+    } catch (e) {
+      return showAuthError('Error del servidor: ' + responseText.substring(0, 100));
+    }
+    
+    if (!r.ok) {
+      return showAuthError('Error: ' + (users.message || users.error || JSON.stringify(users)));
+    }
+    
+    if (!users || !users.length) {
+      return showAuthError('No se pudo crear el usuario');
+    }
+    
+    S.user = users[0];
+    S.clienteEmail = email;
+    localStorage.setItem('cm_user', JSON.stringify(S.user));
+    
+    toast('¡Cuenta creada!');
+    await initApp();
+  } catch (e) {
+    console.error('Register error:', e);
+    showAuthError('Error: ' + e.message);
+  }
+}
+
+function showAuthError(msg) {
+  const el = $('#auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  if (confirm('¿Cerrar sesión?')) {
+    localStorage.removeItem('cm_user');
+    location.reload();
+  }
+}
+
+// ===== NAVIGATION =====
+function navigate(view) {
+  $$('.nav-item').forEach(n => n.classList.remove('active'));
+  $(`.nav-item[data-view="${view}"]`)?.classList.add('active');
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $(`#view-${view}`)?.classList.add('active');
+  
+  const titles = { dashboard:'Dashboard', servicios:'Servicios', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas' };
+  $('#page-title').textContent = titles[view] || '';
+  
+  renderView(view);
+  closeSidebar();
+}
+
+function renderView(v) {
+  const renders = { dashboard:renderDashboard, servicios:renderServicios, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas };
+  renders[v]?.();
+}
+
+function toggleSidebar() {
+  $('#sidebar').classList.toggle('open');
+  $('#mobile-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  $('#sidebar').classList.remove('open');
+  $('#mobile-overlay').classList.remove('open');
+}
+
+// ===== RENDERS =====
+function renderDashboard() {
+  const hoy = new Date().toISOString().split('T')[0];
+  const servHoy = S.servicios.filter(s => s.fecha_servicio === hoy);
+  const pendientes = S.servicios.filter(s => s.estado === 'pendiente' || s.estado === 'confirmado');
+  const stockBajo = S.inventario.filter(i => i.stock < i.stock_minimo);
+  
+  $('#stat-hoy').textContent = servHoy.length;
+  $('#stat-pendientes').textContent = pendientes.length;
+  $('#stat-props').textContent = S.propiedades.length;
+  $('#stat-stock-bajo').textContent = stockBajo.length;
+  
+  // Badge
+  if (pendientes.length) {
+    $('#servicios-badge').style.display = 'inline';
+    $('#servicios-badge').textContent = pendientes.length;
+  } else {
+    $('#servicios-badge').style.display = 'none';
+  }
+  
+  if (stockBajo.length) {
+    $('#stock-alert-badge').style.display = 'inline';
+    $('#stock-alert-badge').textContent = stockBajo.length;
+  } else {
+    $('#stock-alert-badge').style.display = 'none';
+  }
+  
+  // Próximos servicios
+  const proximos = S.servicios.filter(s => s.fecha_servicio >= hoy && s.estado !== 'completado' && s.estado !== 'cancelado').sort((a,b) => a.fecha_servicio.localeCompare(b.fecha_servicio)).slice(0, 5);
+  
+  $('#dash-servicios').innerHTML = proximos.length ? proximos.map(s => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:600;">${s.propiedad_nombre}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">${formatDate(s.fecha_servicio)} ${s.hora_inicio || ''}</div>
+      </div>
+      <span class="badge ${estadoBadge(s.estado)}">${s.estado}</span>
+    </div>
+  `).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">Sin servicios próximos</p>';
+  
+  // Alertas
+  let alertas = [];
+  if (stockBajo.length) alertas.push(`⚠️ ${stockBajo.length} artículos con stock bajo`);
+  const mantPend = S.mantenimiento.filter(m => m.estado === 'pendiente');
+  if (mantPend.length) alertas.push(`🔧 ${mantPend.length} incidencias pendientes`);
+  
+  $('#dash-alertas').innerHTML = alertas.length ? alertas.map(a => `<div style="padding:10px 0; border-bottom:1px solid var(--border);">${a}</div>`).join('') : '<p style="color:var(--text-muted); text-align:center; padding:20px;">✓ Todo en orden</p>';
+}
+
+function renderServicios() {
+  const fecha = $('#serv-fecha').value;
+  const estado = $('#serv-estado').value;
+  const prop = $('#serv-propiedad').value;
+  
+  let list = S.servicios;
+  if (fecha) list = list.filter(s => s.fecha_servicio === fecha);
+  if (estado) list = list.filter(s => s.estado === estado);
+  if (prop) list = list.filter(s => s.propiedad_nombre === prop);
+  
+  list.sort((a, b) => b.fecha_servicio.localeCompare(a.fecha_servicio));
+  
+  $('#servicios-tbody').innerHTML = list.length ? list.map(s => `
+    <tr>
+      <td>${formatDate(s.fecha_servicio)}</td>
+      <td>${s.hora_inicio || '-'}</td>
+      <td><strong>${s.propiedad_nombre}</strong></td>
+      <td><span class="badge badge-neutral">${s.tipo_servicio || 'checkout'}</span></td>
+      <td>${s.huesped_nombre || '-'}</td>
+      <td>${s.empleado_nombre || '<span style="color:var(--text-muted)">Sin asignar</span>'}</td>
+      <td><span class="badge ${estadoBadge(s.estado)}">${s.estado}</span></td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="editServicio(${s.id})">✏️</button>
+        ${s.estado !== 'completado' ? `<button class="btn btn-sm btn-success" onclick="completarServicio(${s.id})">✓</button>` : ''}
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Sin servicios</td></tr>';
+}
+
+function renderStock() {
+  const bajo = S.inventario.filter(i => i.stock < i.stock_minimo);
+  const valor = S.inventario.reduce((s, i) => s + (i.stock * (i.precio_unidad || 0)), 0);
+  
+  $('#stock-total').textContent = S.inventario.length;
+  $('#stock-bajo').textContent = bajo.length;
+  $('#stock-valor').textContent = valor.toFixed(2) + '€';
+  
+  $('#stock-grid').innerHTML = S.inventario.length ? S.inventario.map(i => {
+    const low = i.stock < i.stock_minimo;
+    return `<div class="stock-card ${low ? 'low' : 'ok'}">
+      <div class="stock-info">
+        <div class="stock-name">${i.item}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Mín: ${i.stock_minimo}</div>
+      </div>
+      <div class="stock-qty" style="color:${low ? 'var(--danger)' : 'var(--success)'};">${i.stock}</div>
+      <div class="stock-actions">
+        <button class="stock-btn sub" onclick="adjStock(${i.id}, -1)">−</button>
+        <button class="stock-btn add" onclick="adjStock(${i.id}, 1)">+</button>
+      </div>
+    </div>`;
+  }).join('') : empty('📦', 'Sin artículos');
+}
+
+function renderKits() {
+  $('#kits-grid').innerHTML = S.kits.length ? S.kits.map(k => `
+    <div class="item-card">
+      <div class="item-card-title">${k.nombre}</div>
+      <div class="item-card-meta">${k.descripcion || ''}</div>
+    </div>
+  `).join('') : empty('🎁', 'Sin kits');
+}
+
+function renderPropiedades() {
+  $('#propiedades-grid').innerHTML = S.propiedades.length ? S.propiedades.map(p => `
+    <div class="item-card">
+      <div class="item-card-header">
+        <div class="item-card-title">${p.propiedad_nombre}</div>
+        <span class="badge badge-neutral">${p.precio_limpieza || 0}€</span>
+      </div>
+    </div>
+  `).join('') : empty('🏠', 'Sin propiedades');
+}
+
+function renderPropietarios() {
+  $('#propietarios-grid').innerHTML = S.propietarios.length ? S.propietarios.map(p => `
+    <div class="item-card">
+      <div class="item-card-title">${p.nombre}</div>
+      <div class="item-card-meta">${p.email || ''}<br>${p.telefono || ''}</div>
+    </div>
+  `).join('') : empty('👤', 'Sin propietarios');
+}
+
+function renderEmpleados() {
+  $('#empleados-grid').innerHTML = S.empleados.length ? S.empleados.map(e => `
+    <div class="item-card">
+      <div class="item-card-header">
+        <div class="item-card-title">${e.nombre}</div>
+        <span class="badge ${e.activo ? 'badge-success' : 'badge-neutral'}">${e.activo ? 'Activo' : 'Inactivo'}</span>
+      </div>
+      <div class="item-card-meta">${e.email || ''}</div>
+    </div>
+  `).join('') : empty('👥', 'Sin empleados');
+}
+
+function renderExtras() {
+  const mes = $('#extras-mes').value;
+  let list = S.extras;
+  if (mes) list = list.filter(e => e.fecha?.startsWith(mes));
+  
+  $('#extras-tbody').innerHTML = list.length ? list.map(e => `
+    <tr>
+      <td>${formatDate(e.fecha)}</td>
+      <td>${e.propiedad_nombre || ''}</td>
+      <td>${e.concepto || ''}</td>
+      <td><strong>${(e.importe || 0).toFixed(2)}€</strong></td>
+      <td><button class="btn btn-sm btn-danger" onclick="delExtra(${e.id})">🗑</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">Sin extras</td></tr>';
+}
+
+function renderMantenimiento() {
+  const estado = $('#mant-estado').value;
+  let list = S.mantenimiento;
+  if (estado) list = list.filter(m => m.estado === estado);
+  
+  $('#mantenimiento-grid').innerHTML = list.length ? list.map(m => `
+    <div class="item-card">
+      <div class="item-card-header">
+        <div class="item-card-title">${m.titulo}</div>
+        <span class="badge ${m.estado === 'resuelto' ? 'badge-success' : 'badge-warning'}">${m.estado}</span>
+      </div>
+      <div class="item-card-meta">${m.propiedad_nombre || ''} · ${formatDate(m.fecha)}</div>
+      ${m.importe ? `<div style="margin-top:8px; font-weight:700;">${m.importe.toFixed(2)}€</div>` : ''}
+    </div>
+  `).join('') : empty('🔧', 'Sin incidencias');
+}
+
+function renderGastos() {
+  const mes = $('#gastos-mes').value;
+  const tipo = $('#gastos-tipo').value;
+  let list = S.gastos;
+  if (mes) list = list.filter(g => g.fecha?.startsWith(mes));
+  if (tipo) list = list.filter(g => g.tipo === tipo);
+  
+  const icons = { luz:'💡', agua:'💧', gas:'🔥', comunidad:'🏢', internet:'📶', otro:'📎' };
+  
+  $('#gastos-tbody').innerHTML = list.length ? list.map(g => `
+    <tr>
+      <td>${formatDate(g.fecha)}</td>
+      <td>${g.propiedad_nombre || ''}</td>
+      <td>${icons[g.tipo] || ''} ${g.tipo || ''}</td>
+      <td>${g.concepto || ''}</td>
+      <td><strong>${(g.importe || 0).toFixed(2)}€</strong></td>
+      <td>${g.pagado_por || 'gestor'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="delGasto(${g.id})">🗑</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">Sin gastos</td></tr>';
+}
+
+function renderAlertas() {
+  const a = S.alertas || {};
+  $('#alert-whatsapp').value = a.whatsapp_notificaciones || '';
+  $('#alert-email').value = a.email_notificaciones || '';
+  $('#alert-stock').checked = a.alerta_stock_bajo || false;
+  $('#alert-semanal').checked = a.recordatorio_semanal || false;
+}
+
+// ===== SAVES =====
+async function saveServicio() {
+  const editId = $('#serv-edit-id').value;
+  const propSel = $('#serv-propiedad-sel');
+  const empSel = $('#serv-empleado');
+  const empOpt = empSel.options[empSel.selectedIndex];
+  
+  const data = {
+    cliente_email: S.clienteEmail,
+    propiedad_nombre: propSel.value,
+    tipo_servicio: $('#serv-tipo').value,
+    fecha_servicio: $('#serv-fecha-input').value,
+    hora_inicio: $('#serv-hora').value || null,
+    check_in: $('#serv-checkin').value || null,
+    check_out: $('#serv-checkout').value || null,
+    huesped_nombre: $('#serv-huesped').value.trim() || null,
+    num_huespedes: parseInt($('#serv-num-huespedes').value) || 2,
+    empleado_id: empSel.value || null,
+    empleado_nombre: empOpt?.text !== 'Sin asignar' ? empOpt?.text : null,
+    precio: parseFloat($('#serv-precio').value) || null,
+    estado: $('#serv-estado-sel').value,
+    prioridad: $('#serv-prioridad').value,
+    notas: $('#serv-notas').value.trim() || null
+  };
+  
+  if (!data.propiedad_nombre || !data.fecha_servicio) return toast('Propiedad y fecha son obligatorios', 'error');
+  
+  closeModal('modal-servicio');
+  
+  try {
+    if (editId) {
+      await fetch(`${API}/supa/patch/${TBL.servicios}?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } else {
+      await fetch(`${API}/supa/create/${TBL.servicios}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+    await loadAll();
+    renderServicios();
+    renderDashboard();
+    toast(editId ? 'Servicio actualizado' : 'Servicio creado');
+  } catch (e) { toast('Error', 'error'); }
+}
+
+async function saveStock() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    item: $('#stock-item').value.trim(),
+    stock: parseInt($('#stock-qty').value) || 0,
+    stock_minimo: parseInt($('#stock-min').value) || 10,
+    precio_unidad: parseFloat($('#stock-precio').value) || 0,
+    pagado_por: $('#stock-pagador').value,
+    consumo_por_limpieza: parseInt($('#stock-c-limp').value) || 0,
+    consumo_habitacion: parseInt($('#stock-c-hab').value) || 0,
+    consumo_bano: parseInt($('#stock-c-bano').value) || 0,
+    consumo_huesped: parseInt($('#stock-c-huesp').value) || 0
+  };
+  if (!data.item) return toast('Nombre obligatorio', 'error');
+  
+  closeModal('modal-stock');
+  await create(TBL.inventario, data);
+  await loadAll();
+  renderStock();
+  renderDashboard();
+  toast('Artículo creado');
+}
+
+async function savePropiedad() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    propiedad_nombre: $('#prop-nombre').value.trim(),
+    precio_limpieza: parseFloat($('#prop-precio').value) || 0
+  };
+  if (!data.propiedad_nombre) return toast('Nombre obligatorio', 'error');
+  
+  closeModal('modal-propiedad');
+  await create(TBL.propiedades, data);
+  await loadAll();
+  renderPropiedades();
+  renderDashboard();
+  initFilters();
+  toast('Propiedad creada');
+}
+
+async function savePropietario() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    nombre: $('#propiet-nombre').value.trim(),
+    email: $('#propiet-email').value.trim(),
+    telefono: $('#propiet-telefono').value.trim()
+  };
+  if (!data.nombre) return toast('Nombre obligatorio', 'error');
+  
+  closeModal('modal-propietario');
+  await create(TBL.propietarios, data);
+  await loadAll();
+  renderPropietarios();
+  toast('Propietario creado');
+}
+
+async function saveEmpleado() {
+  const data = {
+    email_host: S.clienteEmail,
+    nombre: $('#emp-nombre').value.trim(),
+    email: $('#emp-email').value.trim(),
+    rol: $('#emp-rol').value,
+    activo: true
+  };
+  if (!data.nombre || !data.email) return toast('Nombre y email obligatorios', 'error');
+  
+  closeModal('modal-empleado');
+  await create(TBL.empleados, data);
+  await loadAll();
+  renderEmpleados();
+  initFilters();
+  toast('Empleado creado');
+}
+
+async function saveKit() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    nombre: $('#kit-nombre').value.trim(),
+    descripcion: $('#kit-desc').value.trim()
+  };
+  if (!data.nombre) return toast('Nombre obligatorio', 'error');
+  
+  closeModal('modal-kit');
+  await create(TBL.kits, data);
+  await loadAll();
+  renderKits();
+  toast('Kit creado');
+}
+
+async function saveExtra() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    fecha: $('#extra-fecha').value,
+    propiedad_nombre: $('#extra-prop').value,
+    concepto: $('#extra-concepto').value.trim(),
+    importe: parseFloat($('#extra-importe').value) || 0
+  };
+  if (!data.fecha || !data.propiedad_nombre || !data.concepto) return toast('Campos obligatorios', 'error');
+  
+  closeModal('modal-extra');
+  await create(TBL.extras, data);
+  await loadAll();
+  renderExtras();
+  toast('Extra añadido');
+}
+
+async function saveMantenimiento() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    fecha: $('#mant-fecha').value || new Date().toISOString().split('T')[0],
+    propiedad_nombre: $('#mant-prop').value,
+    titulo: $('#mant-titulo').value.trim(),
+    descripcion: $('#mant-desc').value.trim(),
+    importe: parseFloat($('#mant-importe').value) || 0,
+    estado: $('#mant-estado-sel').value
+  };
+  if (!data.titulo || !data.propiedad_nombre) return toast('Título y propiedad obligatorios', 'error');
+  
+  closeModal('modal-mantenimiento');
+  await create(TBL.mantenimiento, data);
+  await loadAll();
+  renderMantenimiento();
+  renderDashboard();
+  toast('Incidencia creada');
+}
+
+async function saveGasto() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    fecha: $('#gasto-fecha').value,
+    propiedad_nombre: $('#gasto-prop').value,
+    tipo: $('#gasto-tipo').value,
+    concepto: $('#gasto-concepto').value.trim(),
+    importe: parseFloat($('#gasto-importe').value) || 0
+  };
+  if (!data.fecha || !data.propiedad_nombre) return toast('Campos obligatorios', 'error');
+  
+  closeModal('modal-gasto');
+  await create(TBL.gastos, data);
+  await loadAll();
+  renderGastos();
+  toast('Gasto añadido');
+}
+
+async function saveAlertConfig() {
+  const data = {
+    cliente_email: S.clienteEmail,
+    whatsapp_notificaciones: $('#alert-whatsapp').value.trim(),
+    email_notificaciones: $('#alert-email').value.trim(),
+    alerta_stock_bajo: $('#alert-stock').checked,
+    recordatorio_semanal: $('#alert-semanal').checked
+  };
+  
+  try {
+    if (S.alertas?.id) {
+      await fetch(`${API}/supa/patch/${TBL.alertas}?id=eq.${S.alertas.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } else {
+      await create(TBL.alertas, data);
+    }
+    await loadAll();
+    toast('Configuración guardada');
+  } catch (e) { toast('Error', 'error'); }
+}
+
+// ===== ACTIONS =====
+async function adjStock(id, delta) {
+  const item = S.inventario.find(i => i.id === id);
+  if (!item) return;
+  const newStock = Math.max(0, item.stock + delta);
+  
+  await fetch(`${API}/supa/patch/${TBL.inventario}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stock: newStock })
+  });
+  
+  item.stock = newStock;
+  renderStock();
+  renderDashboard();
+}
+
+function editServicio(id) {
+  const s = S.servicios.find(x => x.id === id);
+  if (!s) return;
+  
+  $('#serv-edit-id').value = id;
+  $('#serv-propiedad-sel').value = s.propiedad_nombre;
+  $('#serv-tipo').value = s.tipo_servicio || 'checkout';
+  $('#serv-fecha-input').value = s.fecha_servicio;
+  $('#serv-hora').value = s.hora_inicio || '';
+  $('#serv-checkin').value = s.check_in || '';
+  $('#serv-checkout').value = s.check_out || '';
+  $('#serv-huesped').value = s.huesped_nombre || '';
+  $('#serv-num-huespedes').value = s.num_huespedes || 2;
+  $('#serv-empleado').value = s.empleado_id || '';
+  $('#serv-precio').value = s.precio || '';
+  $('#serv-estado-sel').value = s.estado || 'pendiente';
+  $('#serv-prioridad').value = s.prioridad || 'normal';
+  $('#serv-notas').value = s.notas || '';
+  
+  openModal('modal-servicio');
+}
+
+async function completarServicio(id) {
+  if (!confirm('¿Marcar como completado?')) return;
+  
+  await fetch(`${API}/supa/patch/${TBL.servicios}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estado: 'completado', completado_at: new Date().toISOString() })
+  });
+  
+  await loadAll();
+  renderServicios();
+  renderDashboard();
+  toast('Servicio completado');
+}
+
+async function delExtra(id) {
+  if (!confirm('¿Eliminar?')) return;
+  await fetch(`${API}/supa/delete/${TBL.extras}?id=eq.${id}`, { method: 'DELETE' });
+  await loadAll();
+  renderExtras();
+}
+
+async function delGasto(id) {
+  if (!confirm('¿Eliminar?')) return;
+  await fetch(`${API}/supa/delete/${TBL.gastos}?id=eq.${id}`, { method: 'DELETE' });
+  await loadAll();
+  renderGastos();
+}
+
+// ===== HELPERS =====
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const show = id => document.getElementById(id).style.display = 'flex';
+const hide = id => document.getElementById(id).style.display = 'none';
+
+async function create(tbl, data) {
+  return fetch(`${API}/supa/create/${tbl}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  
+  // Populate selects
+  populatePropSelect('serv-propiedad-sel');
+  populatePropSelect('extra-prop');
+  populatePropSelect('mant-prop');
+  populatePropSelect('gasto-prop');
+  
+  // Empleados
+  const empSel = $('#serv-empleado');
+  if (empSel) {
+    empSel.innerHTML = '<option value="">Sin asignar</option>' + S.empleados.filter(e => e.activo).map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+  }
+  
+  // Defaults
+  const hoy = new Date().toISOString().split('T')[0];
+  ['serv-fecha-input', 'extra-fecha', 'mant-fecha', 'gasto-fecha'].forEach(id => {
+    const el = $('#' + id);
+    if (el && !el.value) el.value = hoy;
+  });
+  
+  // Clear edit ID
+  if (id === 'modal-servicio' && !$('#serv-edit-id').value) {
+    $('#serv-edit-id').value = '';
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Reset form
+  if (id === 'modal-servicio') {
+    $('#serv-edit-id').value = '';
+  }
+}
+
+function populatePropSelect(id) {
+  const sel = $('#' + id);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecciona...</option>' + S.propiedades.map(p => `<option value="${p.propiedad_nombre}">${p.propiedad_nombre}</option>`).join('');
+}
+
+function initFilters() {
+  // Propiedades filter
+  const propFilter = $('#serv-propiedad');
+  if (propFilter) {
+    propFilter.innerHTML = '<option value="">Todas las propiedades</option>' + S.propiedades.map(p => `<option value="${p.propiedad_nombre}">${p.propiedad_nombre}</option>`).join('');
+  }
+  
+  // Month selectors
+  const months = [];
+  const now = new Date();
+  for (let i = -6; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    months.push({
+      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+    });
+  }
+  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  ['extras-mes', 'gastos-mes'].forEach(id => {
+    const el = $('#' + id);
+    if (el) {
+      el.innerHTML = months.map(m => `<option value="${m.value}" ${m.value === current ? 'selected' : ''}>${m.label}</option>`).join('');
+    }
+  });
+  
+  // Date filter default
+  const servFecha = $('#serv-fecha');
+  if (servFecha && !servFecha.value) {
+    servFecha.value = now.toISOString().split('T')[0];
+  }
+}
+
+function toast(msg, type = 'success') {
+  const el = $('#toast');
+  $('#toast-msg').textContent = msg;
+  $('#toast-icon').textContent = type === 'error' ? '✕' : '✓';
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+}
+
+function estadoBadge(e) {
+  const map = { pendiente: 'badge-warning', confirmado: 'badge-accent', en_proceso: 'badge-warning', completado: 'badge-success', cancelado: 'badge-danger' };
+  return map[e] || 'badge-neutral';
+}
+
+function empty(icon, text) {
+  return `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">${icon}</div><h3>${text}</h3></div>`;
+}
+</script>
+</body>
+</html>
