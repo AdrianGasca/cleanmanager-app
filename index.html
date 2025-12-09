@@ -134,17 +134,48 @@
     .item-card-title { font-weight: 700; font-size: 0.95rem; }
     .item-card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
 
-    .stock-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 14px; }
-    .stock-card.low { border-left: 4px solid var(--danger); }
-    .stock-card.ok { border-left: 4px solid var(--success); }
-    .stock-info { flex: 1; }
-    .stock-name { font-weight: 700; margin-bottom: 4px; }
-    .stock-qty { font-size: 1.3rem; font-weight: 800; }
-    .stock-actions { display: flex; gap: 6px; }
-    .stock-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
-    .stock-btn:hover { background: var(--bg-card-hover); }
-    .stock-btn.add { background: var(--success-bg); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
-    .stock-btn.sub { background: var(--danger-bg); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+    /* Stock Cards - Visual mejorado */
+    .stock-grid-new { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .stock-card-new { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+    .stock-card-new:hover { transform: translateY(-3px); border-color: var(--primary); }
+    .stock-card-new.critical { border: 2px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
+    .stock-card-new.warning { border: 2px solid var(--warning); background: rgba(245, 158, 11, 0.05); }
+    .stock-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .stock-item-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .stock-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .stock-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .stock-badge.min { background: var(--bg-input); color: var(--text-muted); }
+    .stock-badge.price { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+    .stock-badge.prop { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+    .stock-badge.gest { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+    .stock-forecast { padding: 10px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; text-align: center; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .stock-forecast.ok { background: var(--success-bg); color: var(--success); }
+    .stock-forecast.low { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+    .stock-forecast.critical { background: var(--danger-bg); color: var(--danger); }
+    .stock-stat { text-align: center; margin: 15px 0; }
+    .stock-val { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+    .stock-val.ok { color: var(--success); }
+    .stock-val.low { color: var(--warning); }
+    .stock-val.critical { color: var(--danger); }
+    .stock-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; margin-top: 5px; }
+    .stock-actions-new { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+    .stock-btn-new { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.1s; }
+    .stock-btn-new:hover { background: var(--bg-card-hover); border-color: var(--primary); color: var(--primary); }
+    .stock-btn-new.neg:hover { border-color: var(--danger); color: var(--danger); }
+    
+    /* Stats boxes mejorados */
+    .stock-stats-bar { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+    .stock-stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 15px 20px; display: flex; align-items: center; gap: 12px; min-width: 140px; }
+    .stock-stat-box.danger { border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+    .stock-stat-box.warning { border-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+    .stock-stat-icon { font-size: 1.5rem; }
+    .stock-stat-num { font-size: 1.5rem; font-weight: 800; }
+    .stock-stat-label { font-size: 0.75rem; color: var(--text-muted); }
+    
+    /* Form section divider */
+    .form-section-title { font-size: 0.8rem; color: var(--text-muted); margin: 20px 0 12px; padding-top: 16px; border-top: 1px solid var(--border); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+    .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (min-width: 600px) { .form-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; } }
 
     .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
     .empty-state-icon { font-size: 3rem; margin-bottom: 14px; opacity: 0.5; }
@@ -485,26 +516,30 @@
 
       <!-- STOCK -->
       <div id="view-stock" class="view">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Total Artículos</div>
-            <div class="stat-value" id="stock-total">0</div>
-          </div>
-          <div class="stat-card" style="border-color:var(--danger);">
-            <div class="stat-label">Stock Bajo</div>
-            <div class="stat-value" id="stock-bajo" style="color:var(--danger);">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Valor Total</div>
-            <div class="stat-value" id="stock-valor">0€</div>
-          </div>
-        </div>
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">📦 Inventario</h3>
-            <button class="btn btn-primary" onclick="openModal('modal-stock')">+ Nuevo Artículo</button>
+            <button class="btn btn-primary" onclick="openStockModal()">+ Nuevo Artículo</button>
           </div>
-          <div id="stock-grid" class="grid-cards"></div>
+          <div class="stock-stats-bar" id="stock-stats-bar">
+            <div class="stock-stat-box danger">
+              <span class="stock-stat-icon">🚨</span>
+              <div><div class="stock-stat-num" id="stat-bajo-min">0</div><div class="stock-stat-label">Bajo mínimo</div></div>
+            </div>
+            <div class="stock-stat-box warning">
+              <span class="stock-stat-icon">⚠️</span>
+              <div><div class="stock-stat-num" id="stat-agotaran">0</div><div class="stock-stat-label">Se agotarán</div></div>
+            </div>
+            <div class="stock-stat-box">
+              <span class="stock-stat-icon">✅</span>
+              <div><div class="stock-stat-num" id="stat-ok">0</div><div class="stock-stat-label">OK</div></div>
+            </div>
+            <div class="stock-stat-box">
+              <span class="stock-stat-icon">📅</span>
+              <div><div class="stock-stat-num" id="stat-reservas-futuras">0</div><div class="stock-stat-label">Reservas futuras</div></div>
+            </div>
+          </div>
+          <div id="stock-grid" class="stock-grid-new"></div>
         </div>
       </div>
 
@@ -859,15 +894,16 @@
 
 <!-- Modal Stock -->
 <div id="modal-stock" class="modal-overlay">
-  <div class="modal">
+  <div class="modal" style="max-width: 480px;">
     <div class="modal-header">
-      <h3 class="modal-title">📦 Nuevo Artículo</h3>
+      <h3 class="modal-title" id="stock-modal-title">📦 Nuevo Artículo</h3>
       <button class="modal-close" onclick="closeModal('modal-stock')">×</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="stock-edit-id">
       <div class="form-group">
-        <label class="form-label">Nombre *</label>
-        <input type="text" id="stock-item" class="form-input" placeholder="Toallas de baño">
+        <label class="form-label">Nombre del Artículo *</label>
+        <input type="text" id="stock-item" class="form-input" placeholder="Ej: Toalla de Baño">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -875,34 +911,48 @@
           <input type="number" id="stock-qty" class="form-input" value="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Stock Mínimo</label>
+          <label class="form-label">Stock Mínimo (alerta)</label>
           <input type="number" id="stock-min" class="form-input" value="10">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Precio/Unidad (€)</label>
-          <input type="number" id="stock-precio" class="form-input" value="0" step="0.01">
+          <label class="form-label">💶 Precio por Unidad (€)</label>
+          <input type="number" id="stock-precio" class="form-input" value="0" step="0.01" placeholder="0.00">
         </div>
         <div class="form-group">
-          <label class="form-label">Pagador</label>
+          <label class="form-label">💳 ¿Quién paga?</label>
           <select id="stock-pagador" class="form-input">
-            <option value="gestor">Gestor</option>
-            <option value="propietario">Propietario</option>
+            <option value="gestor">🏢 Gestor</option>
+            <option value="propietario">👤 Propietario</option>
           </select>
         </div>
       </div>
-      <h4 style="margin:16px 0 10px; font-size:0.85rem; color:var(--text-secondary);">Consumo por Limpieza</h4>
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Fijo</label><input type="number" id="stock-c-limp" class="form-input" value="0"></div>
-        <div class="form-group"><label class="form-label">x Hab</label><input type="number" id="stock-c-hab" class="form-input" value="0"></div>
-        <div class="form-group"><label class="form-label">x Baño</label><input type="number" id="stock-c-bano" class="form-input" value="0"></div>
-        <div class="form-group"><label class="form-label">x Huésped</label><input type="number" id="stock-c-huesp" class="form-input" value="0"></div>
+      
+      <div class="form-section-title">📐 CONSUMO POR LIMPIEZA</div>
+      <div class="form-group">
+        <label class="form-label">🧹 Fijo por limpieza (amenities, agua, etc)</label>
+        <input type="number" id="stock-c-limp" class="form-input" value="0">
+      </div>
+      <div class="form-grid-4">
+        <div class="form-group"><label class="form-label">🚪 x Habitación</label><input type="number" id="stock-c-hab" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">🚿 x Baño</label><input type="number" id="stock-c-bano" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">🛏️ x Cama Doble</label><input type="number" id="stock-c-cama-doble" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">🛏️ x Cama Individual</label><input type="number" id="stock-c-cama-indiv" class="form-input" value="0"></div>
+      </div>
+      <div class="form-grid-4">
+        <div class="form-group"><label class="form-label">🧑 x Adulto</label><input type="number" id="stock-c-adulto" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">👦 x Niño</label><input type="number" id="stock-c-nino" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">👶 x Bebé</label><input type="number" id="stock-c-bebe" class="form-input" value="0"></div>
+        <div class="form-group"><label class="form-label">👤 x Huésped (total)</label><input type="number" id="stock-c-huesp" class="form-input" value="0"></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-stock')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveStock()">Guardar</button>
+    <div class="modal-footer" style="justify-content: space-between;">
+      <button class="btn btn-danger" id="stock-btn-delete" onclick="deleteStock()" style="display:none;">🗑️ Eliminar</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-stock')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveStock()">💾 Guardar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1687,26 +1737,56 @@ async function syncAllReservas() {
 
 function renderStock() {
   const bajo = S.inventario.filter(i => i.stock < i.stock_minimo);
-  const valor = S.inventario.reduce((s, i) => s + (i.stock * (i.precio_unidad || 0)), 0);
+  const ok = S.inventario.filter(i => i.stock >= i.stock_minimo);
+  // TODO: calcular "se agotarán" basado en reservas futuras
+  const agotaran = 0;
+  const reservasFuturas = S.reservas?.length || 0;
   
-  $('#stock-total').textContent = S.inventario.length;
-  $('#stock-bajo').textContent = bajo.length;
-  $('#stock-valor').textContent = valor.toFixed(2) + '€';
+  $('#stat-bajo-min').textContent = bajo.length;
+  $('#stat-agotaran').textContent = agotaran;
+  $('#stat-ok').textContent = ok.length;
+  $('#stat-reservas-futuras').textContent = reservasFuturas;
+  
+  const formatMoney = n => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   
   $('#stock-grid').innerHTML = S.inventario.length ? S.inventario.map(i => {
-    const low = i.stock < i.stock_minimo;
-    return `<div class="stock-card ${low ? 'low' : 'ok'}">
-      <div class="stock-info">
-        <div class="stock-name">${i.item}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">Mín: ${i.stock_minimo}</div>
+    const isCritical = i.stock < i.stock_minimo;
+    const isLow = i.stock < i.stock_minimo * 1.5 && !isCritical;
+    
+    let statusClass = 'ok', forecastHtml = '';
+    if (isCritical) {
+      statusClass = 'critical';
+      forecastHtml = `<div class="stock-forecast critical">⚠️ Bajo mínimo (${i.stock_minimo})</div>`;
+    } else {
+      forecastHtml = `<div class="stock-forecast ok">✅ Stock OK</div>`;
+    }
+    
+    const cardClass = isCritical ? 'critical' : (isLow ? 'warning' : '');
+    const pagadoBadge = i.pagado_por === 'propietario' 
+      ? '<span class="stock-badge prop">👤 Prop</span>' 
+      : '<span class="stock-badge gest">🏢 Gest</span>';
+    
+    return `<div class="stock-card-new ${cardClass}" onclick="editStock(${i.id})">
+      <div class="stock-card-top">
+        <div class="stock-item-title">${i.item}</div>
+        <div class="stock-badges">
+          <span class="stock-badge min">Min: ${i.stock_minimo}</span>
+          ${i.precio_unidad ? `<span class="stock-badge price">${formatMoney(i.precio_unidad)}</span>` : ''}
+          ${pagadoBadge}
+        </div>
       </div>
-      <div class="stock-qty" style="color:${low ? 'var(--danger)' : 'var(--success)'};">${i.stock}</div>
-      <div class="stock-actions">
-        <button class="stock-btn sub" onclick="adjStock(${i.id}, -1)">−</button>
-        <button class="stock-btn add" onclick="adjStock(${i.id}, 1)">+</button>
+      ${forecastHtml}
+      <div class="stock-stat">
+        <div class="stock-val ${statusClass}">${i.stock}</div>
+        <div class="stock-label">UNIDADES</div>
+      </div>
+      <div class="stock-actions-new">
+        <button class="stock-btn-new neg" onclick="event.stopPropagation(); adjStock(${i.id}, -1)">➖</button>
+        <button class="stock-btn-new" onclick="event.stopPropagation(); adjStock(${i.id}, 1)">➕</button>
+        <button class="stock-btn-new" onclick="event.stopPropagation(); editStock(${i.id})">✏️</button>
       </div>
     </div>`;
-  }).join('') : empty('📦', 'Sin artículos');
+  }).join('') : empty('📦', 'Sin artículos. ¡Crea el primero!');
 }
 
 function renderKits() {
@@ -1863,7 +1943,58 @@ async function saveServicio() {
   } catch (e) { toast('Error', 'error'); }
 }
 
+// === STOCK FUNCTIONS ===
+function openStockModal(item = null) {
+  // Reset form
+  $('#stock-edit-id').value = '';
+  $('#stock-item').value = '';
+  $('#stock-qty').value = '0';
+  $('#stock-min').value = '10';
+  $('#stock-precio').value = '0';
+  $('#stock-pagador').value = 'gestor';
+  $('#stock-c-limp').value = '0';
+  $('#stock-c-hab').value = '0';
+  $('#stock-c-bano').value = '0';
+  $('#stock-c-cama-doble').value = '0';
+  $('#stock-c-cama-indiv').value = '0';
+  $('#stock-c-adulto').value = '0';
+  $('#stock-c-nino').value = '0';
+  $('#stock-c-bebe').value = '0';
+  $('#stock-c-huesp').value = '0';
+  
+  if (item) {
+    $('#stock-modal-title').textContent = '✏️ Editar Artículo';
+    $('#stock-edit-id').value = item.id;
+    $('#stock-item').value = item.item || '';
+    $('#stock-qty').value = item.stock || 0;
+    $('#stock-min').value = item.stock_minimo || 10;
+    $('#stock-precio').value = item.precio_unidad || 0;
+    $('#stock-pagador').value = item.pagado_por || 'gestor';
+    $('#stock-c-limp').value = item.consumo_por_limpieza || 0;
+    $('#stock-c-hab').value = item.consumo_habitacion || 0;
+    $('#stock-c-bano').value = item.consumo_bano || 0;
+    $('#stock-c-cama-doble').value = item.consumo_cama_doble || 0;
+    $('#stock-c-cama-indiv').value = item.consumo_cama_indiv || 0;
+    $('#stock-c-adulto').value = item.consumo_adulto || 0;
+    $('#stock-c-nino').value = item.consumo_nino || 0;
+    $('#stock-c-bebe').value = item.consumo_bebe || 0;
+    $('#stock-c-huesp').value = item.consumo_huesped || 0;
+    $('#stock-btn-delete').style.display = 'block';
+  } else {
+    $('#stock-modal-title').textContent = '📦 Nuevo Artículo';
+    $('#stock-btn-delete').style.display = 'none';
+  }
+  
+  openModal('modal-stock');
+}
+
+function editStock(id) {
+  const item = S.inventario.find(i => i.id === id);
+  if (item) openStockModal(item);
+}
+
 async function saveStock() {
+  const editId = $('#stock-edit-id').value;
   const data = {
     cliente_email: S.clienteEmail,
     item: $('#stock-item').value.trim(),
@@ -1874,16 +2005,58 @@ async function saveStock() {
     consumo_por_limpieza: parseInt($('#stock-c-limp').value) || 0,
     consumo_habitacion: parseInt($('#stock-c-hab').value) || 0,
     consumo_bano: parseInt($('#stock-c-bano').value) || 0,
+    consumo_cama_doble: parseInt($('#stock-c-cama-doble').value) || 0,
+    consumo_cama_indiv: parseInt($('#stock-c-cama-indiv').value) || 0,
+    consumo_adulto: parseInt($('#stock-c-adulto').value) || 0,
+    consumo_nino: parseInt($('#stock-c-nino').value) || 0,
+    consumo_bebe: parseInt($('#stock-c-bebe').value) || 0,
     consumo_huesped: parseInt($('#stock-c-huesp').value) || 0
   };
   if (!data.item) return toast('Nombre obligatorio', 'error');
   
   closeModal('modal-stock');
-  await create(TBL.inventario, data);
-  await loadAll();
-  renderStock();
-  renderDashboard();
-  toast('Artículo creado');
+  
+  try {
+    if (editId) {
+      // Update existing
+      await fetch(`${API}/supa/patch/${TBL.inventario}?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      toast('✅ Artículo actualizado');
+    } else {
+      // Create new
+      await create(TBL.inventario, data);
+      toast('✅ Artículo creado');
+    }
+    await loadAll();
+    renderStock();
+    renderDashboard();
+  } catch (e) {
+    console.error(e);
+    toast('Error al guardar', 'error');
+  }
+}
+
+async function deleteStock() {
+  const editId = $('#stock-edit-id').value;
+  if (!editId) return;
+  
+  if (!confirm('¿Eliminar este artículo del inventario?')) return;
+  
+  closeModal('modal-stock');
+  
+  try {
+    await fetch(`${API}/supa/delete/${TBL.inventario}?id=eq.${editId}`, { method: 'DELETE' });
+    await loadAll();
+    renderStock();
+    renderDashboard();
+    toast('🗑️ Artículo eliminado');
+  } catch (e) {
+    console.error(e);
+    toast('Error al eliminar', 'error');
+  }
 }
 
 async function savePropiedad() {
@@ -2456,7 +2629,7 @@ async function syncPropiedades(plataforma) {
   toast('Importando propiedades de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
   // URL del webhook de n8n (ajusta a tu instancia)
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook';
+  const n8nWebhookBase = 'https://n8n.adrianmartinbernabe.com/webhook';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/propiedades/${plataforma}`;
   
   try {
@@ -2482,7 +2655,7 @@ async function syncPropiedades(plataforma) {
 async function syncReservas(plataforma) {
   toast('Sincronizando reservas de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook';
+  const n8nWebhookBase = 'https://n8n.adrianmartinbernabe.com/webhook';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/reservas/${plataforma}`;
   
   try {
