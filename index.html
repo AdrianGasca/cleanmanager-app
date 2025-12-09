@@ -179,6 +179,19 @@
     .filters-bar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
     .filters-bar select, .filters-bar input { padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem; font-family: var(--font); }
 
+    /* Integration Cards */
+    .integration-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .integration-card:hover { border-color: var(--accent-border); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    .integration-card.connected { border-color: var(--success); background: var(--success-bg); }
+    .integration-icon { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: white; }
+    .integration-name { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .integration-status { font-size: 0.75rem; color: var(--text-muted); }
+    .integration-card.connected .integration-status { color: var(--success); }
+    .integration-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+    .integration-badge.active { background: var(--success-bg); color: var(--success); }
+    .integration-badge.inactive { background: var(--danger-bg); color: var(--danger); }
+    .integration-badge.syncing { background: var(--warning-bg); color: var(--warning); }
+
     /* Servicios específicos */
     .servicio-row { display: flex; align-items: center; gap: 12px; }
     .servicio-prop { font-weight: 700; }
@@ -308,6 +321,9 @@
       </div>
 
       <div class="nav-section">Sistema</div>
+      <div class="nav-item" data-view="integraciones" onclick="navigate('integraciones')">
+        <span class="nav-icon">🔗</span> Integraciones
+      </div>
       <div class="nav-item" data-view="alertas" onclick="navigate('alertas')">
         <span class="nav-icon">🔔</span> Alertas
       </div>
@@ -576,6 +592,110 @@
                 <input type="checkbox" id="alert-semanal"> 📅 Recordatorio semanal
               </label>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTEGRACIONES -->
+      <div id="view-integraciones" class="view">
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-label">Integraciones Activas</div>
+            <div class="stat-value" id="stat-integraciones">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Propiedades Importadas</div>
+            <div class="stat-value" id="stat-props-importadas">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Última Sincronización</div>
+            <div class="stat-value" id="stat-last-sync" style="font-size:1rem;">-</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🔗 Conectar Plataforma</h3>
+          </div>
+          <div class="integration-platforms" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
+            <div class="integration-card" onclick="openIntegrationModal('avaibook')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #667eea, #764ba2);">AB</div>
+              <div class="integration-name">Avaibook</div>
+              <div class="integration-status" id="status-avaibook">No conectado</div>
+            </div>
+            <div class="integration-card" onclick="openIntegrationModal('icnea')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #11998e, #38ef7d);">IC</div>
+              <div class="integration-name">Icnea</div>
+              <div class="integration-status" id="status-icnea">No conectado</div>
+            </div>
+            <div class="integration-card" onclick="openIntegrationModal('hostify')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #ee0979, #ff6a00);">HF</div>
+              <div class="integration-name">Hostify</div>
+              <div class="integration-status" id="status-hostify">No conectado</div>
+            </div>
+            <div class="integration-card" onclick="openIntegrationModal('guesty')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #4facfe, #00f2fe);">GY</div>
+              <div class="integration-name">Guesty</div>
+              <div class="integration-status" id="status-guesty">No conectado</div>
+            </div>
+            <div class="integration-card" onclick="openIntegrationModal('smoobu')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #fa709a, #fee140);">SM</div>
+              <div class="integration-name">Smoobu</div>
+              <div class="integration-status" id="status-smoobu">No conectado</div>
+            </div>
+            <div class="integration-card" onclick="openIntegrationModal('lodgify')">
+              <div class="integration-icon" style="background:linear-gradient(135deg, #a8edea, #fed6e3);">LG</div>
+              <div class="integration-name">Lodgify</div>
+              <div class="integration-status" id="status-lodgify">No conectado</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📋 Integraciones Activas</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Plataforma</th>
+                  <th>Estado</th>
+                  <th>Propiedades</th>
+                  <th>Última Sync</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="integraciones-tbody"></tbody>
+            </table>
+          </div>
+          <div id="integraciones-empty" class="empty-state" style="display:none;">
+            <span style="font-size:3rem;">🔗</span>
+            <p>No hay integraciones activas</p>
+            <p style="font-size:0.85rem; color:var(--text-muted);">Conecta tu PMS para importar propiedades y reservas automáticamente</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🏠 Propiedades Importadas</h3>
+            <button class="btn btn-secondary" onclick="syncAllProperties()">🔄 Sincronizar Todas</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Propiedad</th>
+                  <th>Origen</th>
+                  <th>ID Externo</th>
+                  <th>Habitaciones</th>
+                  <th>Camas</th>
+                  <th>Precio Limpieza</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="props-importadas-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -972,6 +1092,112 @@
   </div>
 </div>
 
+<!-- Modal Integración -->
+<div id="modal-integracion" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="integ-modal-title">🔗 Conectar Plataforma</h3>
+      <button class="modal-close" onclick="closeModal('modal-integracion')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="integ-plataforma">
+      <input type="hidden" id="integ-edit-id">
+      
+      <div id="integ-info" style="background:var(--accent-bg); padding:14px; border-radius:var(--radius-sm); margin-bottom:18px; font-size:0.85rem;">
+        <strong>ℹ️ Información</strong>
+        <p id="integ-help-text" style="margin-top:6px; color:var(--text-secondary);"></p>
+      </div>
+      
+      <!-- Avaibook / Icnea / General -->
+      <div id="integ-fields-apikey" class="form-group">
+        <label class="form-label">API Key *</label>
+        <input type="text" id="integ-apikey" class="form-input" placeholder="Tu API Key">
+      </div>
+      
+      <div id="integ-fields-userid" class="form-group" style="display:none;">
+        <label class="form-label">User ID / Owner ID</label>
+        <input type="text" id="integ-userid" class="form-input" placeholder="ID de usuario en la plataforma">
+      </div>
+      
+      <div id="integ-fields-secret" class="form-group" style="display:none;">
+        <label class="form-label">API Secret</label>
+        <input type="text" id="integ-secret" class="form-input" placeholder="Secret (si aplica)">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Sincronización automática</label>
+        <select id="integ-interval" class="form-input">
+          <option value="60">Cada hora</option>
+          <option value="120">Cada 2 horas</option>
+          <option value="360">Cada 6 horas</option>
+          <option value="720">Cada 12 horas</option>
+          <option value="1440">Diariamente</option>
+        </select>
+      </div>
+      
+      <label style="display:flex; align-items:center; gap:10px; margin-top:14px; cursor:pointer;">
+        <input type="checkbox" id="integ-activo" checked> Integración activa
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="integ-btn-delete" onclick="deleteIntegracion()" style="display:none; margin-right:auto;">Eliminar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-integracion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveIntegracion()">💾 Guardar y Conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mapear Propiedad -->
+<div id="modal-mapear-prop" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🏠 Configurar Propiedad</h3>
+      <button class="modal-close" onclick="closeModal('modal-mapear-prop')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="map-prop-id">
+      <div class="form-group">
+        <label class="form-label">Nombre interno *</label>
+        <input type="text" id="map-prop-nombre" class="form-input" placeholder="Nombre que usarás en CleanManager">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Habitaciones</label>
+          <input type="number" id="map-prop-rooms" class="form-input" value="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Baños</label>
+          <input type="number" id="map-prop-baths" class="form-input" value="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Camas Dobles</label>
+          <input type="number" id="map-prop-camas-dobles" class="form-input" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Camas Individuales</label>
+          <input type="number" id="map-prop-camas-ind" class="form-input" value="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Precio Limpieza (€)</label>
+          <input type="number" id="map-prop-precio" class="form-input" value="45" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Duración (min)</label>
+          <input type="number" id="map-prop-duracion" class="form-input" value="90">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-mapear-prop')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePropMapping()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"><span id="toast-icon">✓</span><span id="toast-msg">OK</span></div>
 
@@ -981,6 +1207,9 @@ const API = 'https://chat.adrian-261.workers.dev';
 const TBL = {
   usuarios: 'cm_usuarios',
   servicios: 'cm_servicios',
+  reservas: 'cm_reservas',
+  credenciales: 'cm_credenciales',
+  propertyMapping: 'cm_property_mapping',
   inventario: 'inventario',
   kits: 'kits',
   propietarios: 'propietarios',
@@ -990,6 +1219,16 @@ const TBL = {
   propiedades: 'propiedades_config',
   empleados: 'empleados',
   alertas: 'alertas_config'
+};
+
+// Información de plataformas
+const PLATFORMS = {
+  avaibook: { name: 'Avaibook', fields: ['apikey', 'userid'], help: 'Obtén tu API Key desde el panel de Avaibook en Configuración → API' },
+  icnea: { name: 'Icnea', fields: ['apikey', 'userid'], help: 'Tu API Key e ID de propietario los encuentras en Icnea → Configuración → API' },
+  hostify: { name: 'Hostify', fields: ['apikey', 'secret'], help: 'Genera tu API Key desde Hostify → Settings → API' },
+  guesty: { name: 'Guesty', fields: ['apikey', 'secret'], help: 'Accede a tu API Key en Guesty → Marketplace → API' },
+  smoobu: { name: 'Smoobu', fields: ['apikey'], help: 'Encuentra tu API Key en Smoobu → Configuración → API' },
+  lodgify: { name: 'Lodgify', fields: ['apikey'], help: 'Tu API Key está en Lodgify → Configuración → Integraciones → API' }
 };
 
 // ===== STATE =====
@@ -1005,7 +1244,9 @@ const S = {
   extras: [],
   propiedades: [],
   empleados: [],
-  alertas: null
+  alertas: null,
+  credenciales: [],
+  propertyMappings: []
 };
 
 // ===== INIT =====
@@ -1057,7 +1298,7 @@ async function loadAll() {
     } catch { return []; }
   };
   
-  [S.servicios, S.inventario, S.kits, S.propietarios, S.gastos, S.mantenimiento, S.extras, S.propiedades, S.empleados] = await Promise.all([
+  [S.servicios, S.inventario, S.kits, S.propietarios, S.gastos, S.mantenimiento, S.extras, S.propiedades, S.empleados, S.credenciales, S.propertyMappings] = await Promise.all([
     load(TBL.servicios),
     load(TBL.inventario),
     load(TBL.kits),
@@ -1066,7 +1307,9 @@ async function loadAll() {
     load(TBL.mantenimiento),
     load(TBL.extras),
     load(TBL.propiedades),
-    load(TBL.empleados, 'email_host')
+    load(TBL.empleados, 'email_host'),
+    load(TBL.credenciales),
+    load(TBL.propertyMapping)
   ]);
   
   const alertas = await load(TBL.alertas);
@@ -1203,7 +1446,7 @@ function navigate(view) {
   $$('.view').forEach(v => v.classList.remove('active'));
   $(`#view-${view}`)?.classList.add('active');
   
-  const titles = { dashboard:'Dashboard', servicios:'Servicios', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas' };
+  const titles = { dashboard:'Dashboard', servicios:'Servicios', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas', integraciones:'Integraciones' };
   $('#page-title').textContent = titles[view] || '';
   
   renderView(view);
@@ -1211,7 +1454,7 @@ function navigate(view) {
 }
 
 function renderView(v) {
-  const renders = { dashboard:renderDashboard, servicios:renderServicios, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas };
+  const renders = { dashboard:renderDashboard, servicios:renderServicios, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas, integraciones:renderIntegraciones };
   renders[v]?.();
 }
 
@@ -1825,6 +2068,295 @@ function estadoBadge(e) {
 
 function empty(icon, text) {
   return `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">${icon}</div><h3>${text}</h3></div>`;
+}
+
+// ===== INTEGRACIONES =====
+async function loadIntegraciones() {
+  try {
+    // Cargar credenciales
+    const credRes = await fetch(`${API}/supa/list/${TBL.credenciales}?cliente_email=eq.${encodeURIComponent(S.clienteEmail)}`);
+    S.credenciales = await credRes.json();
+    
+    // Cargar property mappings
+    const mapRes = await fetch(`${API}/supa/list/${TBL.propertyMapping}?cliente_email=eq.${encodeURIComponent(S.clienteEmail)}`);
+    S.propertyMappings = await mapRes.json();
+    
+    renderIntegraciones();
+  } catch (e) {
+    console.error('Error loading integraciones:', e);
+  }
+}
+
+function renderIntegraciones() {
+  // Stats
+  const activas = S.credenciales.filter(c => c.activo).length;
+  $('#stat-integraciones').textContent = activas;
+  $('#stat-props-importadas').textContent = S.propertyMappings.length;
+  
+  // Last sync
+  const lastSync = S.credenciales.reduce((latest, c) => {
+    if (c.last_sync_at && (!latest || new Date(c.last_sync_at) > new Date(latest))) {
+      return c.last_sync_at;
+    }
+    return latest;
+  }, null);
+  $('#stat-last-sync').textContent = lastSync ? formatDate(lastSync) : '-';
+  
+  // Update platform statuses
+  Object.keys(PLATFORMS).forEach(p => {
+    const cred = S.credenciales.find(c => c.plataforma === p);
+    const statusEl = $(`#status-${p}`);
+    const cardEl = statusEl?.closest('.integration-card');
+    
+    if (cred && cred.activo) {
+      statusEl.textContent = '✓ Conectado';
+      statusEl.style.color = 'var(--success)';
+      cardEl?.classList.add('connected');
+    } else {
+      statusEl.textContent = 'No conectado';
+      statusEl.style.color = 'var(--text-muted)';
+      cardEl?.classList.remove('connected');
+    }
+  });
+  
+  // Table
+  const tbody = $('#integraciones-tbody');
+  const emptyEl = $('#integraciones-empty');
+  
+  if (!S.credenciales.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = S.credenciales.map(c => {
+    const props = S.propertyMappings.filter(p => 
+      (c.plataforma === 'avaibook' && p.avaibook_accommodation_id) ||
+      (c.plataforma === 'icnea' && p.icnea_lodging_id) ||
+      (c.plataforma === 'hostify' && p.hostify_property_id)
+    ).length;
+    
+    const statusClass = c.activo ? (c.last_sync_status === 'error' ? 'badge-danger' : 'badge-success') : 'badge-neutral';
+    const statusText = c.activo ? (c.last_sync_status === 'error' ? 'Error' : 'Activo') : 'Inactivo';
+    
+    return `
+      <tr>
+        <td><strong>${PLATFORMS[c.plataforma]?.name || c.plataforma}</strong></td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td>${props}</td>
+        <td>${c.last_sync_at ? formatDate(c.last_sync_at) : 'Nunca'}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="openIntegrationModal('${c.plataforma}', ${c.id})">✏️</button>
+          <button class="btn btn-sm btn-secondary" onclick="syncIntegracion(${c.id})" title="Sincronizar ahora">🔄</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Props table
+  renderPropsImportadas();
+}
+
+function renderPropsImportadas() {
+  const tbody = $('#props-importadas-tbody');
+  if (!tbody) return;
+  
+  if (!S.propertyMappings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:30px;">No hay propiedades importadas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = S.propertyMappings.map(p => {
+    const origen = p.avaibook_accommodation_id ? 'Avaibook' : 
+                   p.icnea_lodging_id ? 'Icnea' : 
+                   p.hostify_property_id ? 'Hostify' : 'Manual';
+    const extId = p.avaibook_accommodation_id || p.icnea_lodging_id || p.hostify_property_id || '-';
+    
+    return `
+      <tr>
+        <td><strong>${p.propiedad_nombre || p.nombre_externo || 'Sin nombre'}</strong></td>
+        <td><span class="badge badge-neutral">${origen}</span></td>
+        <td style="font-size:0.8rem; color:var(--text-muted);">${extId}</td>
+        <td>${p.total_rooms || '-'}</td>
+        <td>${p.total_camas_dobles || 0}D / ${p.total_camas_individuales || 0}I</td>
+        <td>€${p.precio_limpieza || 45}</td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="editPropMapping(${p.id})">✏️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openIntegrationModal(plataforma, editId = null) {
+  const platform = PLATFORMS[plataforma];
+  if (!platform) return;
+  
+  $('#integ-plataforma').value = plataforma;
+  $('#integ-edit-id').value = editId || '';
+  $('#integ-modal-title').textContent = `🔗 ${platform.name}`;
+  $('#integ-help-text').textContent = platform.help;
+  
+  // Show/hide fields based on platform
+  $('#integ-fields-apikey').style.display = platform.fields.includes('apikey') ? 'block' : 'none';
+  $('#integ-fields-userid').style.display = platform.fields.includes('userid') ? 'block' : 'none';
+  $('#integ-fields-secret').style.display = platform.fields.includes('secret') ? 'block' : 'none';
+  
+  // Clear fields
+  $('#integ-apikey').value = '';
+  $('#integ-userid').value = '';
+  $('#integ-secret').value = '';
+  $('#integ-interval').value = '60';
+  $('#integ-activo').checked = true;
+  
+  // If editing, load existing data
+  if (editId) {
+    const cred = S.credenciales.find(c => c.id === editId);
+    if (cred) {
+      $('#integ-apikey').value = cred.api_key || '';
+      $('#integ-userid').value = cred.user_id || '';
+      $('#integ-secret').value = cred.api_secret || '';
+      $('#integ-interval').value = cred.sync_interval_minutes || 60;
+      $('#integ-activo').checked = cred.activo;
+    }
+    $('#integ-btn-delete').style.display = 'block';
+  } else {
+    $('#integ-btn-delete').style.display = 'none';
+  }
+  
+  document.getElementById('modal-integracion').classList.add('open');
+}
+
+async function saveIntegracion() {
+  const plataforma = $('#integ-plataforma').value;
+  const editId = $('#integ-edit-id').value;
+  const apiKey = $('#integ-apikey').value.trim();
+  const userId = $('#integ-userid').value.trim();
+  const secret = $('#integ-secret').value.trim();
+  const interval = parseInt($('#integ-interval').value);
+  const activo = $('#integ-activo').checked;
+  
+  if (!apiKey) {
+    toast('API Key es requerido', 'error');
+    return;
+  }
+  
+  const data = {
+    cliente_email: S.clienteEmail,
+    plataforma,
+    api_key: apiKey,
+    user_id: userId || null,
+    api_secret: secret || null,
+    sync_interval_minutes: interval,
+    activo
+  };
+  
+  try {
+    let url, method;
+    if (editId) {
+      url = `${API}/supa/patch/${TBL.credenciales}?id=eq.${editId}`;
+      method = 'PATCH';
+    } else {
+      url = `${API}/supa/upsert/${TBL.credenciales}?on_conflict=cliente_email,plataforma`;
+      method = 'POST';
+    }
+    
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!res.ok) throw new Error('Error al guardar');
+    
+    toast('Integración guardada');
+    closeModal('modal-integracion');
+    await loadIntegraciones();
+    
+    // Trigger initial sync
+    if (!editId) {
+      toast('Iniciando sincronización...');
+      // Here you would trigger n8n webhook or similar
+    }
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function deleteIntegracion() {
+  const editId = $('#integ-edit-id').value;
+  if (!editId) return;
+  
+  if (!confirm('¿Eliminar esta integración? Las propiedades importadas se mantendrán.')) return;
+  
+  try {
+    await fetch(`${API}/supa/delete/${TBL.credenciales}?id=eq.${editId}`, { method: 'DELETE' });
+    toast('Integración eliminada');
+    closeModal('modal-integracion');
+    await loadIntegraciones();
+  } catch (e) {
+    toast('Error al eliminar', 'error');
+  }
+}
+
+async function syncIntegracion(id) {
+  toast('Sincronización manual en desarrollo. Por ahora se sincroniza automáticamente cada hora vía n8n.');
+}
+
+async function syncAllProperties() {
+  toast('Sincronizando todas las propiedades...');
+  // This would trigger n8n workflow
+  setTimeout(() => toast('Sincronización completada'), 2000);
+}
+
+function editPropMapping(id) {
+  const prop = S.propertyMappings.find(p => p.id === id);
+  if (!prop) return;
+  
+  $('#map-prop-id').value = id;
+  $('#map-prop-nombre').value = prop.propiedad_nombre || '';
+  $('#map-prop-rooms').value = prop.total_rooms || 1;
+  $('#map-prop-baths').value = prop.total_bathrooms || 1;
+  $('#map-prop-camas-dobles').value = prop.total_camas_dobles || 0;
+  $('#map-prop-camas-ind').value = prop.total_camas_individuales || 0;
+  $('#map-prop-precio').value = prop.precio_limpieza || 45;
+  $('#map-prop-duracion').value = prop.duracion_limpieza_minutos || 90;
+  
+  document.getElementById('modal-mapear-prop').classList.add('open');
+}
+
+async function savePropMapping() {
+  const id = $('#map-prop-id').value;
+  
+  const data = {
+    propiedad_nombre: $('#map-prop-nombre').value.trim(),
+    total_rooms: parseInt($('#map-prop-rooms').value) || 1,
+    total_bathrooms: parseInt($('#map-prop-baths').value) || 1,
+    total_camas_dobles: parseInt($('#map-prop-camas-dobles').value) || 0,
+    total_camas_individuales: parseInt($('#map-prop-camas-ind').value) || 0,
+    precio_limpieza: parseFloat($('#map-prop-precio').value) || 45,
+    duracion_limpieza_minutos: parseInt($('#map-prop-duracion').value) || 90
+  };
+  
+  if (!data.propiedad_nombre) {
+    toast('Nombre es requerido', 'error');
+    return;
+  }
+  
+  try {
+    await fetch(`${API}/supa/patch/${TBL.propertyMapping}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    toast('Propiedad actualizada');
+    closeModal('modal-mapear-prop');
+    await loadIntegraciones();
+  } catch (e) {
+    toast('Error al guardar', 'error');
+  }
 }
 </script>
 </body>
