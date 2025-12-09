@@ -3296,44 +3296,62 @@ function renderLimpiezasMes() {
 let currentConsumosMes = new Date().toISOString().slice(0, 7);
 
 function changeConsumosMes(delta) {
-  const [year, month] = currentConsumosMes.split('-').map(Number);
-  const newDate = new Date(year, month - 1 + delta, 1);
-  currentConsumosMes = newDate.toISOString().slice(0, 7);
-  renderConsumos();
+  try {
+    const [year, month] = currentConsumosMes.split('-').map(Number);
+    const newDate = new Date(year, month - 1 + delta, 1);
+    currentConsumosMes = newDate.toISOString().slice(0, 7);
+    console.log('Cambiando a mes:', currentConsumosMes);
+    renderConsumos();
+  } catch (err) {
+    console.error('Error en changeConsumosMes:', err);
+  }
 }
 
 function renderConsumos() {
-  const [year, month] = currentConsumosMes.split('-');
-  const mesLabel = new Date(year, month - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-  $('#consumos-mes-label').textContent = mesLabel.charAt(0).toUpperCase() + mesLabel.slice(1);
-  
-  const gastos = calcGastosMes(currentConsumosMes);
-  
-  $('#consumo-total').textContent = formatMoney(gastos.total);
-  $('#consumo-reservas').textContent = gastos.numReservas;
-  $('#consumo-gestor').textContent = formatMoney(gastos.gestor);
-  $('#consumo-propietario').textContent = formatMoney(gastos.propietario);
-  
-  // Desglose
-  const desglose = $('#consumos-desglose');
-  desglose.innerHTML = gastos.desglose.map(g => `
-    <div class="consumo-item">
-      <div>
-        <span class="consumo-nombre">${g.nombre}</span>
-        <span class="consumo-pagador ${g.pagador}">${g.pagador === 'gestor' ? '🏢' : '👤'}</span>
-      </div>
-      <div>
-        <span style="color:var(--text-muted);">${g.unidades} uds × ${formatMoney(g.precioUnitario)}</span>
-        <span class="consumo-valor">${formatMoney(g.total)}</span>
-      </div>
-    </div>
-  `).join('') || '<p style="color:var(--text-muted);">Sin consumos este mes</p>';
-  
-  // Proyección
-  renderProyeccion();
-  
-  // Gráfico
-  renderConsumosChart();
+  try {
+    const [year, month] = currentConsumosMes.split('-');
+    const mesLabel = new Date(year, month - 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    
+    const labelEl = $('#consumos-mes-label');
+    if (labelEl) labelEl.textContent = mesLabel.charAt(0).toUpperCase() + mesLabel.slice(1);
+    
+    const gastos = calcGastosMes(currentConsumosMes);
+    
+    const totalEl = $('#consumo-total');
+    const reservasEl = $('#consumo-reservas');
+    const gestorEl = $('#consumo-gestor');
+    const propietarioEl = $('#consumo-propietario');
+    
+    if (totalEl) totalEl.textContent = formatMoney(gastos.total);
+    if (reservasEl) reservasEl.textContent = gastos.numReservas;
+    if (gestorEl) gestorEl.textContent = formatMoney(gastos.gestor);
+    if (propietarioEl) propietarioEl.textContent = formatMoney(gastos.propietario);
+    
+    // Desglose
+    const desglose = $('#consumos-desglose');
+    if (desglose) {
+      desglose.innerHTML = gastos.desglose.map(g => `
+        <div class="consumo-item">
+          <div>
+            <span class="consumo-nombre">${g.nombre}</span>
+            <span class="consumo-pagador ${g.pagador}">${g.pagador === 'gestor' ? '🏢' : '👤'}</span>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);">${g.unidades} uds × ${formatMoney(g.precioUnitario)}</span>
+            <span class="consumo-valor">${formatMoney(g.total)}</span>
+          </div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);">Sin consumos este mes</p>';
+    }
+    
+    // Proyección
+    renderProyeccion();
+    
+    // Gráfico
+    renderConsumosChart();
+  } catch (err) {
+    console.error('Error en renderConsumos:', err);
+  }
 }
 
 function calcGastosMes(mes) {
@@ -3391,108 +3409,121 @@ function calcGastosMes(mes) {
 }
 
 function renderProyeccion() {
-  const today = new Date();
-  const [year, month] = currentConsumosMes.split('-').map(Number);
+  const proyeccionEl = $('#consumos-proyeccion');
+  if (!proyeccionEl) return;
   
-  if (year !== today.getFullYear() || month !== today.getMonth() + 1) {
-    $('#consumos-proyeccion').innerHTML = '<p style="color:var(--text-muted);">Proyección solo disponible para el mes actual</p>';
-    return;
-  }
-  
-  // Buscar reservas futuras del mes actual (por check_out)
-  const finMes = new Date(year, month, 0, 23, 59, 59);
-  const reservasFuturas = (S.reservas || []).filter(r => {
-    if (r.status === 'cancelled') return false;
-    const checkoutDate = new Date(r.check_out);
-    return checkoutDate > today && checkoutDate <= finMes;
-  });
-  
-  const inventario = S.stock || S.inventario || [];
-  let proyeccion = 0;
-  const desgloseProyeccion = [];
-  
-  for (const item of inventario) {
-    let unidadesProyectadas = 0;
-    for (const reserva of reservasFuturas) {
-      unidadesProyectadas += calcConsumoReserva(item, reserva);
+  try {
+    const today = new Date();
+    const [year, month] = currentConsumosMes.split('-').map(Number);
+    
+    if (year !== today.getFullYear() || month !== today.getMonth() + 1) {
+      proyeccionEl.innerHTML = '<p style="color:var(--text-muted);">Proyección solo disponible para el mes actual</p>';
+      return;
     }
-    if (unidadesProyectadas > 0) {
-      const subtotal = unidadesProyectadas * (item.precio_unidad || 0);
-      proyeccion += subtotal;
-      desgloseProyeccion.push({ nombre: item.item, unidades: unidadesProyectadas, total: subtotal });
+    
+    // Buscar reservas futuras del mes actual (por check_out)
+    const finMes = new Date(year, month, 0, 23, 59, 59);
+    const reservasFuturas = (S.reservas || []).filter(r => {
+      if (r.status === 'cancelled') return false;
+      const checkoutDate = new Date(r.check_out);
+      return checkoutDate > today && checkoutDate <= finMes;
+    });
+    
+    const inventario = S.stock || S.inventario || [];
+    let proyeccion = 0;
+    const desgloseProyeccion = [];
+    
+    for (const item of inventario) {
+      let unidadesProyectadas = 0;
+      for (const reserva of reservasFuturas) {
+        unidadesProyectadas += calcConsumoReserva(item, reserva);
+      }
+      if (unidadesProyectadas > 0) {
+        const subtotal = unidadesProyectadas * (item.precio_unidad || 0);
+        proyeccion += subtotal;
+        desgloseProyeccion.push({ nombre: item.item, unidades: unidadesProyectadas, total: subtotal });
+      }
     }
+    
+    proyeccionEl.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Reservas pendientes mes</div>
+          <div class="stat-value">${reservasFuturas.length}</div>
+        </div>
+        <div class="stat-card accent">
+          <div class="stat-label">Gasto proyectado restante</div>
+          <div class="stat-value">${formatMoney(proyeccion)}</div>
+        </div>
+      </div>
+      ${desgloseProyeccion.length > 0 ? `
+        <div style="margin-top:12px;">
+          <strong>Desglose proyectado:</strong>
+          ${desgloseProyeccion.slice(0, 5).map(d => `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${d.nombre} (${d.unidades} uds)</span><span>${formatMoney(d.total)}</span></div>`).join('')}
+          ${desgloseProyeccion.length > 5 ? `<div style="color:var(--text-muted);">...y ${desgloseProyeccion.length - 5} más</div>` : ''}
+        </div>
+      ` : ''}
+    `;
+  } catch (err) {
+    console.error('Error en renderProyeccion:', err);
   }
-  
-  $('#consumos-proyeccion').innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Reservas pendientes mes</div>
-        <div class="stat-value">${reservasFuturas.length}</div>
-      </div>
-      <div class="stat-card accent">
-        <div class="stat-label">Gasto proyectado restante</div>
-        <div class="stat-value">${formatMoney(proyeccion)}</div>
-      </div>
-    </div>
-    ${desgloseProyeccion.length > 0 ? `
-      <div style="margin-top:12px;">
-        <strong>Desglose proyectado:</strong>
-        ${desgloseProyeccion.slice(0, 5).map(d => `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${d.nombre} (${d.unidades} uds)</span><span>${formatMoney(d.total)}</span></div>`).join('')}
-        ${desgloseProyeccion.length > 5 ? `<div style="color:var(--text-muted);">...y ${desgloseProyeccion.length - 5} más</div>` : ''}
-      </div>
-    ` : ''}
-  `;
 }
 
 function renderConsumosChart() {
-  const ctx = document.getElementById('consumos-chart');
-  if (!ctx) return;
-  
-  // Calcular últimos 6 meses
-  const meses = [];
-  const valores = [];
-  const [year, month] = currentConsumosMes.split('-').map(Number);
-  
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(year, month - 1 - i, 1);
-    const mesKey = d.toISOString().slice(0, 7);
-    const mesLabel = d.toLocaleDateString('es-ES', { month: 'short' });
-    meses.push(mesLabel);
-    valores.push(calcGastosMes(mesKey).total);
+  try {
+    const ctx = document.getElementById('consumos-chart');
+    if (!ctx) return;
+    
+    // Calcular últimos 6 meses
+    const meses = [];
+    const valores = [];
+    const [year, month] = currentConsumosMes.split('-').map(Number);
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(year, month - 1 - i, 1);
+      const mesKey = d.toISOString().slice(0, 7);
+      const mesLabel = d.toLocaleDateString('es-ES', { month: 'short' });
+      meses.push(mesLabel);
+      valores.push(calcGastosMes(mesKey).total);
+    }
+    
+    // Simple canvas chart
+    const context = ctx.getContext('2d');
+    if (!context) return;
+    
+    const width = ctx.width = (ctx.parentElement?.offsetWidth - 40) || 400;
+    const height = ctx.height = 200;
+    const padding = 40;
+    const maxVal = Math.max(...valores, 1);
+    
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = '#1c1c26';
+    context.fillRect(0, 0, width, height);
+    
+    const barWidth = (width - padding * 2) / meses.length - 10;
+    
+    meses.forEach((mes, i) => {
+      const x = padding + i * ((width - padding * 2) / meses.length) + 5;
+      const barHeight = (valores[i] / maxVal) * (height - padding * 2);
+      const y = height - padding - barHeight;
+      
+      // Bar
+      context.fillStyle = '#6366f1';
+      context.fillRect(x, y, barWidth, barHeight);
+      
+      // Label
+      context.fillStyle = '#a1a1aa';
+      context.font = '11px DM Sans';
+      context.textAlign = 'center';
+      context.fillText(mes, x + barWidth / 2, height - 10);
+      
+      // Value
+      context.fillStyle = '#f4f4f5';
+      context.fillText(valores[i].toFixed(0) + '€', x + barWidth / 2, y - 5);
+    });
+  } catch (err) {
+    console.error('Error en renderConsumosChart:', err);
   }
-  
-  // Simple canvas chart
-  const context = ctx.getContext('2d');
-  const width = ctx.width = ctx.parentElement?.offsetWidth - 40 || 400;
-  const height = ctx.height = 200;
-  const padding = 40;
-  const maxVal = Math.max(...valores, 1);
-  
-  context.clearRect(0, 0, width, height);
-  context.fillStyle = '#1c1c26';
-  context.fillRect(0, 0, width, height);
-  
-  const barWidth = (width - padding * 2) / meses.length - 10;
-  
-  meses.forEach((mes, i) => {
-    const x = padding + i * ((width - padding * 2) / meses.length) + 5;
-    const barHeight = (valores[i] / maxVal) * (height - padding * 2);
-    const y = height - padding - barHeight;
-    
-    // Bar
-    context.fillStyle = '#6366f1';
-    context.fillRect(x, y, barWidth, barHeight);
-    
-    // Label
-    context.fillStyle = '#a1a1aa';
-    context.font = '11px DM Sans';
-    context.textAlign = 'center';
-    context.fillText(mes, x + barWidth / 2, height - 10);
-    
-    // Value
-    context.fillStyle = '#f4f4f5';
-    context.fillText(valores[i].toFixed(0) + '€', x + barWidth / 2, y - 5);
-  });
 }
 
 // ===============================================
