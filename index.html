@@ -1821,7 +1821,7 @@ function navigate(view) {
   $$('.view').forEach(v => v.classList.remove('active'));
   $(`#view-${view}`)?.classList.add('active');
   
-  const titles = { dashboard:'Dashboard', servicios:'Servicios', reservas:'Reservas', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas', integraciones:'Integraciones' };
+  const titles = { dashboard:'Dashboard', servicios:'Servicios', reservas:'Reservas', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', limpiezas:'Limpiezas', consumos:'Consumos', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', informes:'Informes', alertas:'Alertas', integraciones:'Integraciones' };
   $('#page-title').textContent = titles[view] || '';
   
   renderView(view);
@@ -1829,7 +1829,7 @@ function navigate(view) {
 }
 
 function renderView(v) {
-  const renders = { dashboard:renderDashboard, servicios:renderServicios, reservas:renderReservas, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas, integraciones:renderIntegraciones };
+  const renders = { dashboard:renderDashboard, servicios:renderServicios, reservas:renderReservas, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, limpiezas:renderLimpiezasMes, consumos:renderConsumos, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, informes:renderInformes, alertas:renderAlertas, integraciones:renderIntegraciones };
   renders[v]?.();
 }
 
@@ -2167,6 +2167,14 @@ function renderAlertas() {
   $('#alert-email').value = a.email_notificaciones || '';
   $('#alert-stock').checked = a.alerta_stock_bajo || false;
   $('#alert-semanal').checked = a.recordatorio_semanal || false;
+  
+  // Cargar config de localStorage
+  loadAlertConfig();
+  
+  // Calcular forecasts y actualizar alertas
+  calculateForecasts();
+  updateAlertPreview();
+  renderAlertasEstado();
 }
 
 // ===== SAVES =====
@@ -2702,6 +2710,11 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
 }
 
+function formatMoney(n) {
+  if (n === null || n === undefined || isNaN(n)) return '0 €';
+  return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
 function estadoBadge(e) {
   const map = { pendiente: 'badge-warning', confirmado: 'badge-accent', en_proceso: 'badge-warning', completado: 'badge-success', cancelado: 'badge-danger' };
   return map[e] || 'badge-neutral';
@@ -3123,14 +3136,14 @@ function calcConsumoReserva(item, reserva) {
   const propIds = item.propiedades_ids || [];
   if (propIds.length > 0) {
     // Tiene propiedades específicas asignadas
-    const reservaPropId = reserva.propiedad_id || reserva.property_id;
-    const reservaPropNombre = reserva.propiedad || reserva.propiedad_nombre || '';
+    const reservaPropId = reserva.propiedad_id;
+    const reservaPropNombre = reserva.propiedad_nombre || '';
     
     // Buscar la propiedad por ID o nombre
     let propMatch = false;
     if (reservaPropId && propIds.includes(reservaPropId)) {
       propMatch = true;
-    } else {
+    } else if (reservaPropNombre) {
       // Buscar por nombre
       const propPorNombre = S.propiedades.find(p => 
         (p.nombre === reservaPropNombre || p.propiedad_nombre === reservaPropNombre)
@@ -3143,16 +3156,40 @@ function calcConsumoReserva(item, reserva) {
     if (!propMatch) return 0; // Este artículo no aplica a esta propiedad
   }
   
+  // Obtener datos de la propiedad para habitaciones/baños si no están en la reserva
+  let habitaciones = reserva.habitaciones || reserva.total_rooms || 1;
+  let banos = reserva.banos || reserva.total_bathrooms || 1;
+  let camasDobles = reserva.camas_dobles || reserva.total_camas_dobles || 0;
+  let camasIndiv = reserva.camas_individuales || reserva.total_camas_individuales || 0;
+  
+  // Intentar obtener de la propiedad si no hay datos
+  if (reserva.propiedad_nombre) {
+    const prop = S.propiedades.find(p => p.propiedad_nombre === reserva.propiedad_nombre);
+    if (prop) {
+      habitaciones = habitaciones || prop.total_rooms || 1;
+      banos = banos || prop.total_bathrooms || 1;
+      camasDobles = camasDobles || prop.total_camas_dobles || 0;
+      camasIndiv = camasIndiv || prop.total_camas_individuales || 0;
+    }
+  }
+  
+  // Datos de huéspedes - usar campos correctos de cm_reservas
+  const numHuespedes = reserva.num_huespedes || reserva.guests || 2;
+  const numAdultos = reserva.num_adultos || reserva.adults || numHuespedes;
+  const numNinos = reserva.num_ninos || reserva.children || 0;
+  const numBebes = reserva.num_bebes || reserva.infants || 0;
+  
   let consumo = 0;
   consumo += item.consumo_por_limpieza || 0;
-  consumo += (item.consumo_habitacion || 0) * (reserva.habitaciones || reserva.total_rooms || 1);
-  consumo += (item.consumo_bano || 0) * (reserva.banos || reserva.total_bathrooms || 1);
-  consumo += (item.consumo_cama_doble || 0) * (reserva.camas_dobles || reserva.total_camas_dobles || 0);
-  consumo += (item.consumo_cama_indiv || 0) * (reserva.camas_individuales || reserva.total_camas_individuales || 0);
-  consumo += (item.consumo_huesped || 0) * (reserva.huespedes || reserva.guests || reserva.num_huespedes || 2);
-  consumo += (item.consumo_adulto || 0) * (reserva.adultos || reserva.adults || 0);
-  consumo += (item.consumo_nino || 0) * (reserva.ninos || reserva.children || 0);
-  consumo += (item.consumo_bebe || 0) * (reserva.bebes || reserva.infants || 0);
+  consumo += (item.consumo_habitacion || 0) * habitaciones;
+  consumo += (item.consumo_bano || 0) * banos;
+  consumo += (item.consumo_cama_doble || 0) * camasDobles;
+  consumo += (item.consumo_cama_indiv || 0) * camasIndiv;
+  consumo += (item.consumo_huesped || 0) * numHuespedes;
+  consumo += (item.consumo_adulto || 0) * numAdultos;
+  consumo += (item.consumo_nino || 0) * numNinos;
+  consumo += (item.consumo_bebe || 0) * numBebes;
+  
   return consumo;
 }
 
@@ -3257,7 +3294,6 @@ function renderLimpiezasMes() {
 // CONSUMOS MENSUALES
 // ===============================================
 let currentConsumosMes = new Date().toISOString().slice(0, 7);
-let consumosChart = null;
 
 function changeConsumosMes(delta) {
   const [year, month] = currentConsumosMes.split('-').map(Number);
@@ -3301,37 +3337,23 @@ function renderConsumos() {
 }
 
 function calcGastosMes(mes) {
-  // Buscar reservas cuyo checkout esté en el mes seleccionado
-  // Las reservas pueden venir de S.reservas (Airtable) o S.servicios
+  // Buscar reservas cuyo check_out esté en el mes seleccionado
   const [year, month] = mes.split('-').map(Number);
   const inicioMes = new Date(year, month - 1, 1);
   const finMes = new Date(year, month, 0, 23, 59, 59);
   
-  // Combinar reservas de diferentes fuentes
-  let todasReservas = [];
+  // Filtrar reservas del mes (por check_out)
+  let reservasMes = [];
   
-  // Desde S.reservas (si existe - datos de Airtable/plataformas)
   if (S.reservas && S.reservas.length > 0) {
-    const reservasMes = S.reservas.filter(r => {
-      const checkout = new Date(r.checkout || r.check_out || r.fecha_checkout);
-      return checkout >= inicioMes && checkout <= finMes;
+    reservasMes = S.reservas.filter(r => {
+      if (r.status === 'cancelled') return false; // Excluir canceladas
+      const checkoutDate = new Date(r.check_out);
+      return checkoutDate >= inicioMes && checkoutDate <= finMes;
     });
-    todasReservas = todasReservas.concat(reservasMes);
   }
   
-  // Desde S.servicios (servicios de limpieza programados)
-  if (S.servicios && S.servicios.length > 0) {
-    const serviciosMes = S.servicios.filter(s => {
-      const fecha = new Date(s.fecha_servicio);
-      return fecha >= inicioMes && fecha <= finMes && s.estado !== 'cancelado';
-    });
-    // Solo añadir servicios que no sean duplicados de reservas
-    serviciosMes.forEach(s => {
-      if (!todasReservas.find(r => r.id === s.reserva_id)) {
-        todasReservas.push(s);
-      }
-    });
-  }
+  console.log('Reservas en el mes:', mes, reservasMes.length, reservasMes);
   
   let total = 0, gestor = 0, propietario = 0;
   const desglose = [];
@@ -3342,7 +3364,7 @@ function calcGastosMes(mes) {
   for (const item of inventario) {
     let unidadesConsumidas = 0;
     
-    for (const reserva of todasReservas) {
+    for (const reserva of reservasMes) {
       unidadesConsumidas += calcConsumoReserva(item, reserva);
     }
     
@@ -3365,7 +3387,7 @@ function calcGastosMes(mes) {
     }
   }
   
-  return { total, gestor, propietario, numReservas: todasReservas.length, desglose };
+  return { total, gestor, propietario, numReservas: reservasMes.length, desglose };
 }
 
 function renderProyeccion() {
@@ -3377,22 +3399,34 @@ function renderProyeccion() {
     return;
   }
   
-  const reservasFuturas = S.servicios.filter(s => {
-    const fecha = new Date(s.fecha_servicio);
-    return fecha > today && fecha.getMonth() === today.getMonth() && s.estado !== 'cancelado';
+  // Buscar reservas futuras del mes actual (por check_out)
+  const finMes = new Date(year, month, 0, 23, 59, 59);
+  const reservasFuturas = (S.reservas || []).filter(r => {
+    if (r.status === 'cancelled') return false;
+    const checkoutDate = new Date(r.check_out);
+    return checkoutDate > today && checkoutDate <= finMes;
   });
   
+  const inventario = S.stock || S.inventario || [];
   let proyeccion = 0;
-  for (const reserva of reservasFuturas) {
-    for (const item of S.stock) {
-      proyeccion += calcConsumoReserva(item, reserva) * (item.precio_unidad || 0);
+  const desgloseProyeccion = [];
+  
+  for (const item of inventario) {
+    let unidadesProyectadas = 0;
+    for (const reserva of reservasFuturas) {
+      unidadesProyectadas += calcConsumoReserva(item, reserva);
+    }
+    if (unidadesProyectadas > 0) {
+      const subtotal = unidadesProyectadas * (item.precio_unidad || 0);
+      proyeccion += subtotal;
+      desgloseProyeccion.push({ nombre: item.item, unidades: unidadesProyectadas, total: subtotal });
     }
   }
   
   $('#consumos-proyeccion').innerHTML = `
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Reservas pendientes</div>
+        <div class="stat-label">Reservas pendientes mes</div>
         <div class="stat-value">${reservasFuturas.length}</div>
       </div>
       <div class="stat-card accent">
@@ -3400,6 +3434,13 @@ function renderProyeccion() {
         <div class="stat-value">${formatMoney(proyeccion)}</div>
       </div>
     </div>
+    ${desgloseProyeccion.length > 0 ? `
+      <div style="margin-top:12px;">
+        <strong>Desglose proyectado:</strong>
+        ${desgloseProyeccion.slice(0, 5).map(d => `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${d.nombre} (${d.unidades} uds)</span><span>${formatMoney(d.total)}</span></div>`).join('')}
+        ${desgloseProyeccion.length > 5 ? `<div style="color:var(--text-muted);">...y ${desgloseProyeccion.length - 5} más</div>` : ''}
+      </div>
+    ` : ''}
   `;
 }
 
@@ -3420,11 +3461,9 @@ function renderConsumosChart() {
     valores.push(calcGastosMes(mesKey).total);
   }
   
-  if (consumosChart) consumosChart.destroy();
-  
   // Simple canvas chart
   const context = ctx.getContext('2d');
-  const width = ctx.width = ctx.parentElement.offsetWidth - 40;
+  const width = ctx.width = ctx.parentElement?.offsetWidth - 40 || 400;
   const height = ctx.height = 200;
   const padding = 40;
   const maxVal = Math.max(...valores, 1);
@@ -3459,6 +3498,19 @@ function renderConsumosChart() {
 // ===============================================
 // INFORMES PDF Y EXCEL
 // ===============================================
+function renderInformes() {
+  // Inicializar selects de propietarios
+  const propSelect = $('#informe-propietario');
+  if (propSelect) {
+    propSelect.innerHTML = S.propietarios.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+  }
+  
+  // Set default month
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  if ($('#informe-mes')) $('#informe-mes').value = currentMonth;
+  if ($('#excel-mes')) $('#excel-mes').value = currentMonth;
+}
+
 function generarInformePDF() {
   const mes = $('#informe-mes').value || currentConsumosMes;
   const tipo = $('#informe-tipo').value;
