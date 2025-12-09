@@ -235,6 +235,9 @@
     .forecast-badge.warning { background: var(--warning-bg); color: var(--warning); }
     .forecast-badge.danger { background: var(--danger-bg); color: var(--danger); }
     
+    /* Stock props badge */
+    .stock-badge.props { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    
     /* Consumos desglose */
     .consumo-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .consumo-item:last-child { border-bottom: none; }
@@ -1191,6 +1194,19 @@ Selecciona un tipo de informe y haz clic en generar para ver la vista previa.
         <div class="form-group"><label class="form-label">👶 x Bebé</label><input type="number" id="stock-c-bebe" class="form-input" value="0"></div>
         <div class="form-group"><label class="form-label">👤 x Huésped (total)</label><input type="number" id="stock-c-huesp" class="form-input" value="0"></div>
       </div>
+      
+      <div class="form-section-title">🏠 APLICAR A PROPIEDADES</div>
+      <div class="form-group">
+        <label class="form-label">¿En qué propiedades se usa este artículo?</label>
+        <div id="stock-propiedades-list" style="max-height:150px; overflow-y:auto; background:var(--bg-input); border-radius:var(--radius-sm); padding:12px;">
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;">
+            <input type="checkbox" id="stock-todas-props" onchange="toggleAllStockProps(this.checked)" checked>
+            <strong>✅ Todas las propiedades</strong>
+          </label>
+          <div id="stock-props-checkboxes"></div>
+        </div>
+        <small style="color:var(--text-muted);">Desmarca "Todas" para seleccionar propiedades específicas (ej: vino solo en Villa Premium)</small>
+      </div>
     </div>
     <div class="modal-footer" style="justify-content: space-between;">
       <button class="btn btn-danger" id="stock-btn-delete" onclick="deleteStock()" style="display:none;">🗑️ Eliminar</button>
@@ -1670,6 +1686,9 @@ async function loadAll() {
   
   const alertas = await load(TBL.alertas);
   S.alertas = alertas[0] || null;
+  
+  // Alias para compatibilidad
+  S.stock = S.inventario;
 }
 
 // ===== AUTH =====
@@ -2011,6 +2030,17 @@ function renderStock() {
       ? '<span class="stock-badge prop">👤 Prop</span>' 
       : '<span class="stock-badge gest">🏢 Gest</span>';
     
+    // Badge de propiedades específicas
+    let propsBadge = '';
+    if (i.propiedades_ids && i.propiedades_ids.length > 0) {
+      const numProps = i.propiedades_ids.length;
+      const propsNames = i.propiedades_ids.map(pid => {
+        const p = S.propiedades.find(pr => pr.id === pid);
+        return p ? (p.nombre || p.propiedad_nombre) : '?';
+      }).join(', ');
+      propsBadge = `<span class="stock-badge props" title="${propsNames}">🏠 ${numProps} prop${numProps > 1 ? 's' : ''}</span>`;
+    }
+    
     return `<div class="stock-card-new ${cardClass}" onclick="editStock(${i.id})">
       <div class="stock-card-top">
         <div class="stock-item-title">${i.item}</div>
@@ -2018,6 +2048,7 @@ function renderStock() {
           <span class="stock-badge min">Min: ${i.stock_minimo}</span>
           ${i.precio_unidad ? `<span class="stock-badge price">${formatMoney(i.precio_unidad)}</span>` : ''}
           ${pagadoBadge}
+          ${propsBadge}
         </div>
       </div>
       ${forecastHtml}
@@ -2207,6 +2238,9 @@ function openStockModal(item = null) {
   $('#stock-c-bebe').value = '0';
   $('#stock-c-huesp').value = '0';
   
+  // Render propiedades checkboxes
+  renderStockPropsCheckboxes(item);
+  
   if (item) {
     $('#stock-modal-title').textContent = '✏️ Editar Artículo';
     $('#stock-edit-id').value = item.id;
@@ -2233,6 +2267,52 @@ function openStockModal(item = null) {
   openModal('modal-stock');
 }
 
+function renderStockPropsCheckboxes(item = null) {
+  const container = $('#stock-props-checkboxes');
+  const todasCheck = $('#stock-todas-props');
+  
+  // Si no hay propiedades, esconder
+  if (!S.propiedades || S.propiedades.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);">No hay propiedades creadas</p>';
+    return;
+  }
+  
+  // Determinar si tiene todas o algunas específicas
+  const propIds = item?.propiedades_ids || [];
+  const tieneTodasONinguna = !propIds || propIds.length === 0;
+  
+  todasCheck.checked = tieneTodasONinguna;
+  
+  container.innerHTML = S.propiedades.map(p => {
+    const checked = tieneTodasONinguna || propIds.includes(p.id);
+    const disabled = tieneTodasONinguna ? 'disabled' : '';
+    return `<label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; opacity:${tieneTodasONinguna ? '0.5' : '1'};">
+      <input type="checkbox" class="stock-prop-check" value="${p.id}" ${checked ? 'checked' : ''} ${disabled}>
+      ${p.nombre || p.propiedad_nombre || 'Sin nombre'}
+    </label>`;
+  }).join('');
+}
+
+function toggleAllStockProps(checked) {
+  const checkboxes = document.querySelectorAll('.stock-prop-check');
+  checkboxes.forEach(cb => {
+    cb.disabled = checked;
+    cb.checked = checked;
+    cb.parentElement.style.opacity = checked ? '0.5' : '1';
+  });
+}
+
+function getSelectedStockProps() {
+  if ($('#stock-todas-props').checked) {
+    return []; // Array vacío = todas las propiedades
+  }
+  const selected = [];
+  document.querySelectorAll('.stock-prop-check:checked').forEach(cb => {
+    selected.push(parseInt(cb.value));
+  });
+  return selected;
+}
+
 function editStock(id) {
   const item = S.inventario.find(i => i.id === id);
   if (item) openStockModal(item);
@@ -2240,6 +2320,8 @@ function editStock(id) {
 
 async function saveStock() {
   const editId = $('#stock-edit-id').value;
+  const propiedadesIds = getSelectedStockProps();
+  
   const data = {
     cliente_email: S.clienteEmail,
     item: $('#stock-item').value.trim(),
@@ -2255,7 +2337,8 @@ async function saveStock() {
     consumo_adulto: parseInt($('#stock-c-adulto').value) || 0,
     consumo_nino: parseInt($('#stock-c-nino').value) || 0,
     consumo_bebe: parseInt($('#stock-c-bebe').value) || 0,
-    consumo_huesped: parseInt($('#stock-c-huesp').value) || 0
+    consumo_huesped: parseInt($('#stock-c-huesp').value) || 0,
+    propiedades_ids: propiedadesIds
   };
   if (!data.item) return toast('Nombre obligatorio', 'error');
   
@@ -3036,16 +3119,40 @@ function calculateForecasts() {
 }
 
 function calcConsumoReserva(item, reserva) {
+  // Verificar si el artículo aplica a la propiedad de la reserva
+  const propIds = item.propiedades_ids || [];
+  if (propIds.length > 0) {
+    // Tiene propiedades específicas asignadas
+    const reservaPropId = reserva.propiedad_id || reserva.property_id;
+    const reservaPropNombre = reserva.propiedad || reserva.propiedad_nombre || '';
+    
+    // Buscar la propiedad por ID o nombre
+    let propMatch = false;
+    if (reservaPropId && propIds.includes(reservaPropId)) {
+      propMatch = true;
+    } else {
+      // Buscar por nombre
+      const propPorNombre = S.propiedades.find(p => 
+        (p.nombre === reservaPropNombre || p.propiedad_nombre === reservaPropNombre)
+      );
+      if (propPorNombre && propIds.includes(propPorNombre.id)) {
+        propMatch = true;
+      }
+    }
+    
+    if (!propMatch) return 0; // Este artículo no aplica a esta propiedad
+  }
+  
   let consumo = 0;
   consumo += item.consumo_por_limpieza || 0;
   consumo += (item.consumo_habitacion || 0) * (reserva.habitaciones || reserva.total_rooms || 1);
   consumo += (item.consumo_bano || 0) * (reserva.banos || reserva.total_bathrooms || 1);
-  consumo += (item.consumo_cama_doble || 0) * (reserva.camas_dobles || 0);
-  consumo += (item.consumo_cama_indiv || 0) * (reserva.camas_individuales || 0);
-  consumo += (item.consumo_huesped || 0) * (reserva.huespedes || reserva.guests || 1);
-  consumo += (item.consumo_adulto || 0) * (reserva.adultos || 0);
-  consumo += (item.consumo_nino || 0) * (reserva.ninos || 0);
-  consumo += (item.consumo_bebe || 0) * (reserva.bebes || 0);
+  consumo += (item.consumo_cama_doble || 0) * (reserva.camas_dobles || reserva.total_camas_dobles || 0);
+  consumo += (item.consumo_cama_indiv || 0) * (reserva.camas_individuales || reserva.total_camas_individuales || 0);
+  consumo += (item.consumo_huesped || 0) * (reserva.huespedes || reserva.guests || reserva.num_huespedes || 2);
+  consumo += (item.consumo_adulto || 0) * (reserva.adultos || reserva.adults || 0);
+  consumo += (item.consumo_nino || 0) * (reserva.ninos || reserva.children || 0);
+  consumo += (item.consumo_bebe || 0) * (reserva.bebes || reserva.infants || 0);
   return consumo;
 }
 
@@ -3194,15 +3301,48 @@ function renderConsumos() {
 }
 
 function calcGastosMes(mes) {
-  const reservasMes = S.servicios.filter(s => (s.fecha_servicio || '').slice(0, 7) === mes && s.estado === 'completado');
+  // Buscar reservas cuyo checkout esté en el mes seleccionado
+  // Las reservas pueden venir de S.reservas (Airtable) o S.servicios
+  const [year, month] = mes.split('-').map(Number);
+  const inicioMes = new Date(year, month - 1, 1);
+  const finMes = new Date(year, month, 0, 23, 59, 59);
+  
+  // Combinar reservas de diferentes fuentes
+  let todasReservas = [];
+  
+  // Desde S.reservas (si existe - datos de Airtable/plataformas)
+  if (S.reservas && S.reservas.length > 0) {
+    const reservasMes = S.reservas.filter(r => {
+      const checkout = new Date(r.checkout || r.check_out || r.fecha_checkout);
+      return checkout >= inicioMes && checkout <= finMes;
+    });
+    todasReservas = todasReservas.concat(reservasMes);
+  }
+  
+  // Desde S.servicios (servicios de limpieza programados)
+  if (S.servicios && S.servicios.length > 0) {
+    const serviciosMes = S.servicios.filter(s => {
+      const fecha = new Date(s.fecha_servicio);
+      return fecha >= inicioMes && fecha <= finMes && s.estado !== 'cancelado';
+    });
+    // Solo añadir servicios que no sean duplicados de reservas
+    serviciosMes.forEach(s => {
+      if (!todasReservas.find(r => r.id === s.reserva_id)) {
+        todasReservas.push(s);
+      }
+    });
+  }
   
   let total = 0, gestor = 0, propietario = 0;
   const desglose = [];
   
-  for (const item of S.stock) {
+  // Usar S.stock o S.inventario según lo que exista
+  const inventario = S.stock || S.inventario || [];
+  
+  for (const item of inventario) {
     let unidadesConsumidas = 0;
     
-    for (const reserva of reservasMes) {
+    for (const reserva of todasReservas) {
       unidadesConsumidas += calcConsumoReserva(item, reserva);
     }
     
@@ -3225,7 +3365,7 @@ function calcGastosMes(mes) {
     }
   }
   
-  return { total, gestor, propietario, numReservas: reservasMes.length, desglose };
+  return { total, gestor, propietario, numReservas: todasReservas.length, desglose };
 }
 
 function renderProyeccion() {
