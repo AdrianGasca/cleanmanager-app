@@ -288,6 +288,9 @@
         <span class="nav-icon">📅</span> Servicios
         <span class="nav-badge" id="servicios-badge" style="display:none;">0</span>
       </div>
+      <div class="nav-item" data-view="reservas" onclick="navigate('reservas')">
+        <span class="nav-icon">🛏️</span> Reservas
+      </div>
 
       <div class="nav-section">Inventario</div>
       <div class="nav-item" data-view="stock" onclick="navigate('stock')">
@@ -426,6 +429,56 @@
               </thead>
               <tbody id="servicios-tbody"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESERVAS -->
+      <div id="view-reservas" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🛏️ Reservas</h3>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary" onclick="syncAllReservas()">🔄 Sincronizar</button>
+            </div>
+          </div>
+          <div class="filters-bar">
+            <input type="date" id="res-desde" onchange="renderReservas()">
+            <input type="date" id="res-hasta" onchange="renderReservas()">
+            <select id="res-origen" onchange="renderReservas()">
+              <option value="">Todos los orígenes</option>
+              <option value="avaibook">Avaibook</option>
+              <option value="icnea">Icnea</option>
+              <option value="hostify">Hostify</option>
+              <option value="manual">Manual</option>
+            </select>
+            <select id="res-status" onchange="renderReservas()">
+              <option value="">Todos los estados</option>
+              <option value="confirmed">✅ Confirmada</option>
+              <option value="pending">⏳ Pendiente</option>
+              <option value="cancelled">❌ Cancelada</option>
+            </select>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Propiedad</th>
+                  <th>Huésped</th>
+                  <th>Huéspedes</th>
+                  <th>Canal</th>
+                  <th>Estado</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody id="reservas-tbody"></tbody>
+            </table>
+            <div id="reservas-empty" class="empty-state" style="display:none;">
+              <span style="font-size:2rem;">🛏️</span>
+              <p>No hay reservas. Conecta un PMS en Integraciones.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1251,6 +1304,7 @@ const S = {
   propiedades: [],
   empleados: [],
   alertas: null,
+  reservas: [],
   credenciales: [],
   propertyMappings: []
 };
@@ -1304,7 +1358,7 @@ async function loadAll() {
     } catch { return []; }
   };
   
-  [S.servicios, S.inventario, S.kits, S.propietarios, S.gastos, S.mantenimiento, S.extras, S.propiedades, S.empleados, S.credenciales, S.propertyMappings] = await Promise.all([
+  [S.servicios, S.inventario, S.kits, S.propietarios, S.gastos, S.mantenimiento, S.extras, S.propiedades, S.empleados, S.reservas, S.credenciales, S.propertyMappings] = await Promise.all([
     load(TBL.servicios),
     load(TBL.inventario),
     load(TBL.kits),
@@ -1314,6 +1368,7 @@ async function loadAll() {
     load(TBL.extras),
     load(TBL.propiedades),
     load(TBL.empleados, 'email_host'),
+    load(TBL.reservas),
     load(TBL.credenciales),
     load(TBL.propertyMapping)
   ]);
@@ -1452,7 +1507,7 @@ function navigate(view) {
   $$('.view').forEach(v => v.classList.remove('active'));
   $(`#view-${view}`)?.classList.add('active');
   
-  const titles = { dashboard:'Dashboard', servicios:'Servicios', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas', integraciones:'Integraciones' };
+  const titles = { dashboard:'Dashboard', servicios:'Servicios', reservas:'Reservas', stock:'Inventario', kits:'Kits', propiedades:'Propiedades', propietarios:'Propietarios', empleados:'Empleados', extras:'Extras', mantenimiento:'Mantenimiento', gastos:'Gastos Fijos', alertas:'Alertas', integraciones:'Integraciones' };
   $('#page-title').textContent = titles[view] || '';
   
   renderView(view);
@@ -1460,7 +1515,7 @@ function navigate(view) {
 }
 
 function renderView(v) {
-  const renders = { dashboard:renderDashboard, servicios:renderServicios, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas, integraciones:renderIntegraciones };
+  const renders = { dashboard:renderDashboard, servicios:renderServicios, reservas:renderReservas, stock:renderStock, kits:renderKits, propiedades:renderPropiedades, propietarios:renderPropietarios, empleados:renderEmpleados, extras:renderExtras, mantenimiento:renderMantenimiento, gastos:renderGastos, alertas:renderAlertas, integraciones:renderIntegraciones };
   renders[v]?.();
 }
 
@@ -1549,6 +1604,85 @@ function renderServicios() {
       </td>
     </tr>
   `).join('') : '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Sin servicios</td></tr>';
+}
+
+function renderReservas() {
+  const tbody = $('#reservas-tbody');
+  const emptyEl = $('#reservas-empty');
+  
+  // Filtros
+  const desde = $('#res-desde').value;
+  const hasta = $('#res-hasta').value;
+  const origen = $('#res-origen').value;
+  const status = $('#res-status').value;
+  
+  let filtered = [...S.reservas];
+  
+  if (desde) filtered = filtered.filter(r => r.check_in >= desde);
+  if (hasta) filtered = filtered.filter(r => r.check_in <= hasta);
+  if (origen) filtered = filtered.filter(r => r.origen === origen);
+  if (status) filtered = filtered.filter(r => r.status === status);
+  
+  // Ordenar por check_in
+  filtered.sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+  
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  
+  emptyEl.style.display = 'none';
+  
+  const statusBadge = (s) => {
+    if (s === 'confirmed') return 'badge-success';
+    if (s === 'cancelled') return 'badge-danger';
+    return 'badge-warning';
+  };
+  
+  const statusText = (s) => {
+    if (s === 'confirmed') return '✅ Confirmada';
+    if (s === 'cancelled') return '❌ Cancelada';
+    return '⏳ Pendiente';
+  };
+  
+  const canalIcon = (origen, partner) => {
+    if (partner?.toLowerCase().includes('airbnb')) return '🏠 Airbnb';
+    if (partner?.toLowerCase().includes('booking')) return '🅱️ Booking';
+    if (origen === 'avaibook') return '📗 Avaibook';
+    if (origen === 'icnea') return '📘 Icnea';
+    return partner || origen || 'Directo';
+  };
+  
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td><strong>${formatDate(r.check_in)}</strong></td>
+      <td>${formatDate(r.check_out)}</td>
+      <td>${r.propiedad_nombre || '<span style="color:var(--text-muted)">Sin asignar</span>'}</td>
+      <td>
+        <div>${r.huesped_nombre || 'Huésped'}</div>
+        <small style="color:var(--text-muted)">${r.huesped_email || ''}</small>
+      </td>
+      <td>${r.num_huespedes || '-'} (${r.num_adultos || 0}A/${r.num_ninos || 0}N)</td>
+      <td>${canalIcon(r.origen, r.partner_name)}</td>
+      <td><span class="badge ${statusBadge(r.status)}">${statusText(r.status)}</span></td>
+      <td><strong>${r.precio ? r.precio.toFixed(2) + '€' : '-'}</strong></td>
+    </tr>
+  `).join('');
+}
+
+async function syncAllReservas() {
+  toast('Sincronizando reservas de todos los PMS...');
+  
+  const plataformas = [...new Set(S.credenciales.filter(c => c.activo).map(c => c.plataforma))];
+  
+  for (const plataforma of plataformas) {
+    await syncReservas(plataforma);
+  }
+  
+  await loadAll();
+  renderReservas();
+  toast('✅ Sincronización completada');
 }
 
 function renderStock() {
@@ -2322,7 +2456,7 @@ async function syncPropiedades(plataforma) {
   toast('Importando propiedades de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
   // URL del webhook de n8n (ajusta a tu instancia)
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook-test';
+  const n8nWebhookBase = 'https://n8n.adrianmartinbernabe.com/webhook';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/propiedades/${plataforma}`;
   
   try {
@@ -2348,7 +2482,7 @@ async function syncPropiedades(plataforma) {
 async function syncReservas(plataforma) {
   toast('Sincronizando reservas de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook-test';
+  const n8nWebhookBase = 'https://n8n.adrianmartinbernabe.com/webhook';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/reservas/${plataforma}`;
   
   try {
