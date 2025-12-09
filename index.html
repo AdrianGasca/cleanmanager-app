@@ -2348,7 +2348,7 @@ async function syncPropiedades(plataforma) {
 async function syncReservas(plataforma) {
   toast('Sincronizando reservas de ' + (PLATFORMS[plataforma]?.name || plataforma) + '...');
   
-  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook-tes';
+  const n8nWebhookBase = 'https://primary-production-69f9.up.railway.app/webhook-test';
   const webhookUrl = `${n8nWebhookBase}/cleanmanager/sync/reservas/${plataforma}`;
   
   try {
