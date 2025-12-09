@@ -2252,34 +2252,54 @@ async function saveIntegracion() {
     activo
   };
   
+  console.log('Saving integration:', data);
+  
   try {
-    let url, method;
+    let res;
+    
     if (editId) {
-      url = `${API}/supa/patch/${TBL.credenciales}?id=eq.${editId}`;
-      method = 'PATCH';
+      // Editar existente
+      res = await fetch(`${API}/supa/patch/${TBL.credenciales}?id=eq.${editId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
     } else {
-      url = `${API}/supa/upsert/${TBL.credenciales}?on_conflict=cliente_email,plataforma`;
-      method = 'POST';
+      // Verificar si ya existe
+      const checkRes = await fetch(`${API}/supa/list/${TBL.credenciales}?cliente_email=eq.${encodeURIComponent(S.clienteEmail)}&plataforma=eq.${plataforma}`);
+      const existing = await checkRes.json();
+      
+      if (existing && existing.length > 0) {
+        // Actualizar existente
+        res = await fetch(`${API}/supa/patch/${TBL.credenciales}?id=eq.${existing[0].id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        // Crear nuevo
+        res = await fetch(`${API}/supa/create/${TBL.credenciales}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
     }
     
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    console.log('Response status:', res.status);
+    const responseText = await res.text();
+    console.log('Response body:', responseText);
     
-    if (!res.ok) throw new Error('Error al guardar');
+    if (!res.ok) {
+      throw new Error(responseText || 'Error al guardar');
+    }
     
-    toast('Integración guardada');
+    toast('Integración guardada correctamente');
     closeModal('modal-integracion');
     await loadIntegraciones();
     
-    // Trigger initial sync
-    if (!editId) {
-      toast('Iniciando sincronización...');
-      // Here you would trigger n8n webhook or similar
-    }
   } catch (e) {
+    console.error('Error saving integration:', e);
     toast('Error: ' + e.message, 'error');
   }
 }
